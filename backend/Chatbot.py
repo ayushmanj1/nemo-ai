@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 
 # Load environment variables
-load_dotenv()
+load_dotenv(override=True)
 
 Username = os.getenv("Username", "User")
 Assistantname = os.getenv("Assistantname", "Nemo")
@@ -56,11 +56,6 @@ def ChatBot(Query):
     global messages
 
     try:
-        log_path = os.path.join("Data", "ChatLog.json")
-        if os.path.exists(log_path):
-            with open(log_path, "r", encoding="utf-8") as f:
-                messages = load(f)
-
         combined_system_prompt = SystemChatBot[0]["content"] + "\n" + RealtimeInformation()
         messages_to_send = [{"role": "system", "content": combined_system_prompt}] + messages[-5:] + [{"role": "user", "content": Query}]
 
@@ -76,7 +71,6 @@ def ChatBot(Query):
                 stream=True
             )
             for chunk in completion:
-                pass
                 if chunk.choices[0].delta.content:
                     Answer += chunk.choices[0].delta.content
                     yield Answer
@@ -93,7 +87,6 @@ def ChatBot(Query):
                     stream=True
                 )
                 for chunk in completion:
-                    pass
                     if chunk.choices[0].delta.content:
                         Answer += chunk.choices[0].delta.content
                         yield Answer
@@ -111,7 +104,6 @@ def ChatBot(Query):
             )
             Answer = ""
             for event in stream:
-                pass
                 if event.event_type == "text-generation":
                     Answer += event.text
                     yield Answer
@@ -119,15 +111,14 @@ def ChatBot(Query):
             print(f"All Models Failed: {final_e}")
             yield f"Error: {final_e}"
 
-    # Save interaction
+    # Save interaction to RAM
     if Answer:
-        try:
-            messages.append({"role": "user", "content": Query})
-            messages.append({"role": "assistant", "content": Answer})
-            log_path = os.path.join("Data", "ChatLog.json")
-            with open(log_path, "w", encoding="utf-8") as f:
-                dump(messages, f, indent=4)
-        except: pass
+        messages.append({"role": "user", "content": Query})
+        messages.append({"role": "assistant", "content": Answer})
+
+def ClearChatHistory():
+    global messages
+    messages.clear()
 
 
 # Run program

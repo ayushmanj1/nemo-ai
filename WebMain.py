@@ -22,7 +22,7 @@ if sys.stdout.encoding != 'utf-8':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 # ── Environment ──────────────────────────────────────────────────────────────
-load_dotenv()
+load_dotenv(override=True)
 Username      = os.getenv("Username", "User")
 Assistantname = os.getenv("Assistantname", "Nemo")
 
@@ -67,11 +67,6 @@ for fname, default in [("Stop.data", "False"), ("Responses.data", "")]:
     if not os.path.exists(path):
         _write(fname, default)
 
-chatlog = os.path.join(current_dir, "Data", "ChatLog.json")
-if not os.path.exists(chatlog):
-    with open(chatlog, "w") as f:
-        f.write("[]")
-
 # ── Mock keyboard module to prevent crashes in headless/cloud environments ───────
 # The backend modules import `keyboard` which requires root on Linux.
 # We mock it completely to avoid the import error and handle interrupts cleanly.
@@ -92,7 +87,7 @@ _interrupt_flag = _mock_kb._interrupt_flag
 from backend.Model import FirstLayerDMM
 from backend.RealtimeSearchEngin import RealtimeSearchEngine
 
-from backend.Chatbot import ChatBot
+from backend.Chatbot import ChatBot, ClearChatHistory
 from backend.ImageGeneration import GenerateImages
 
 # ── Query modifier ───────────────────────────────────────────────────────────
@@ -128,12 +123,20 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
 @app.route("/")
 def index():
+    # Clear chat history on refresh for user privacy
+    ClearChatHistory()
+    
     # no_cache headers so browser always gets fresh HTML
     response = app.make_response(render_template("index.html"))
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '0'
     return response
+
+@app.route("/clear", methods=["POST"])
+def clear_chat():
+    ClearChatHistory()
+    return jsonify(status="success", message="Chat history cleared from RAM"), 200
 
 
 @app.route("/Data/<path:filename>")

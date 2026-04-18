@@ -18,7 +18,7 @@ if sys.stdout.encoding != 'utf-8':
 warnings.filterwarnings("ignore")
 
 # Load environment variables
-load_dotenv()
+load_dotenv(override=True)
 
 Username = os.getenv("Username", "User")
 Assistantname = os.getenv("Assistantname", "Nemo")
@@ -29,8 +29,7 @@ CohereAPIKey = os.getenv("CohereAPIKey")
 client = Groq(api_key=GroqAPIKey)
 co_client = cohere.Client(api_key=CohereAPIKey)
 
-# Global messages list
-messages = []
+from backend.Chatbot import messages
 
 # System prompt
 System = f"""You are {Assistantname}, my advanced, deeply respectful, and high-energy AI assistant. 
@@ -54,12 +53,14 @@ You are speaking with {Username}. Your goal is to provide cheerful, supportive, 
 
 # Search Function
 def GoogleSearch(query):
+    print(f"[GoogleSearch] Searching for: {query}")
     try:
         from duckduckgo_search import DDGS
         results = []
         try:
             with DDGS() as ddgs:
-                ddgs_gen = ddgs.text(query, max_results=5)
+                # Use keywords for clarity and the new 'text' method signature
+                ddgs_gen = ddgs.text(keywords=query, max_results=5)
                 if ddgs_gen:
                     for r in ddgs_gen:
                         results.append({
@@ -68,13 +69,15 @@ def GoogleSearch(query):
                             'href': r.get('href', '#')
                         })
         except Exception as e:
-            print(f"DDG Search Error: {e}")
+            print(f"[GoogleSearch] DDG Search Error: {e}")
 
         # Fallback to googlesearch-python if DDGS is empty
         if not results:
+            print(f"[GoogleSearch] DDG returned no results, trying Google fallback...")
             try:
                 from googlesearch import search
-                google_results = search(query, num_results=5, advanced=True)
+                # Explicitly cast search results to list
+                google_results = list(search(query, num_results=5, advanced=True))
                 for r in google_results:
                     results.append({
                         'title': r.title,
@@ -82,18 +85,21 @@ def GoogleSearch(query):
                         'href': r.url
                     })
             except Exception as ge:
-                print(f"Google Search Fallback Error: {ge}")
+                print(f"[GoogleSearch] Google Search Fallback Error: {ge}")
 
         if not results:
-            return f"No search results found for '{query}' on any engine. Please try rephrasing."
+            print(f"[GoogleSearch] All search engines failed for: {query}")
+            return f"No search results found for '{query}'. Please try rephrasing or check connectivity."
 
+        print(f"[GoogleSearch] Found {len(results)} results.")
         Answer = f"The search results for '{query}' are:\n[start]\n"
         for i in results:
             Answer += f"Title: {i.get('title')}\nDescription: {i.get('body')}\nUrl: {i.get('href')}\n\n"
         Answer += "[end]"
         return Answer
     except Exception as e:
-        return f"No search results found for '{query}' due to a critical error: {e}"
+        print(f"[GoogleSearch] Critical error in GoogleSearch function: {e}")
+        return f"I encountered a search error: {e}"
 
 # Real-time info
 def Information():
@@ -102,22 +108,13 @@ def Information():
 
 # Main Engine
 def RealtimeSearchEngine(prompt):
+    # Using 'messages' imported from backend.Chatbot for shared RAM storage
     global messages
 
     Answer = ""
     search_context = ""
 
     try:
-        log_path = os.path.join("Data", "ChatLog.json")
-        if os.path.exists(log_path):
-            with open(log_path, "r", encoding="utf-8") as f:
-                try:
-                    messages = load(f)
-                except:
-                    messages = []
-        else:
-            messages = []
-
         # Clean search query (remove conversational filler)
         search_query = prompt.lower()
         fillers = [Assistantname.lower(), "hey", "tell me", "what is", "who is", "about", "please", "search for", "find info on", "can you", "search"]
@@ -148,7 +145,6 @@ def RealtimeSearchEngine(prompt):
                 stream=True
             )
             for chunk in completion:
-                pass
                 if chunk.choices[0].delta.content:
                     Answer += chunk.choices[0].delta.content
                     yield Answer
@@ -165,7 +161,6 @@ def RealtimeSearchEngine(prompt):
                         stream=True
                     )
                     for chunk in completion:
-                        pass
                         if chunk.choices[0].delta.content:
                             Answer += chunk.choices[0].delta.content
                             yield Answer
@@ -184,15 +179,10 @@ def RealtimeSearchEngine(prompt):
         print(f"Critical Error: {e}")
         yield f"Error: {e}"
 
-    # Save interaction
+    # Save interaction to RAM shared with Chatbot
     if Answer:
-        try:
-            messages.append({"role": "user", "content": prompt})
-            messages.append({"role": "assistant", "content": Answer})
-            log_path = os.path.join("Data", "ChatLog.json")
-            with open(log_path, "w", encoding="utf-8") as f:
-                dump(messages, f, indent=4)
-        except: pass
+        messages.append({"role": "user", "content": prompt})
+        messages.append({"role": "assistant", "content": Answer})
 
 def FallbackToCohere(prompt, search_context):
     full_text = ""
