@@ -1,12 +1,13 @@
 import cohere
 from rich import print
-from dotenv import dotenv_values
+from dotenv import load_dotenv
+import os
 
-# Load environment variables from the .env file.
-env_vars = dotenv_values(".env")
+# Load environment variables
+load_dotenv()
 
-# Retrieve API key.
-CohereAPIKey = env_vars.get("CohereAPIKey")
+# Retrieve API key
+CohereAPIKey = os.getenv("CohereAPIKey")
 
 # Create a Cohere client using the provided API key.
 if not CohereAPIKey:
@@ -85,7 +86,7 @@ def FirstLayerDMM(prompt: str = "test"):
     try:
         if not co: return ["general " + prompt]
         
-        GroqAPIKey = env_vars.get("GroqAPIKey")
+        GroqAPIKey = os.getenv("GroqAPIKey")
         if GroqAPIKey:
             from groq import Groq
             groq_client = Groq(api_key=GroqAPIKey)

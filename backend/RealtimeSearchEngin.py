@@ -3,7 +3,8 @@ import sys
 import datetime
 import io
 from json import load, dump
-from dotenv import dotenv_values
+from dotenv import load_dotenv
+import os
 from groq import Groq
 import cohere
 import warnings
@@ -17,12 +18,12 @@ if sys.stdout.encoding != 'utf-8':
 warnings.filterwarnings("ignore")
 
 # Load environment variables
-env_vars = dotenv_values(".env")
+load_dotenv()
 
-Username = env_vars.get("Username", "User")
-Assistantname = env_vars.get("Assistantname", "Nemo")
-GroqAPIKey = env_vars.get("GroqAPIKey")
-CohereAPIKey = env_vars.get("CohereAPIKey")
+Username = os.getenv("Username", "User")
+Assistantname = os.getenv("Assistantname", "Nemo")
+GroqAPIKey = os.getenv("GroqAPIKey")
+CohereAPIKey = os.getenv("CohereAPIKey")
 
 # Initialize clients
 client = Groq(api_key=GroqAPIKey)

@@ -1,7 +1,7 @@
 import asyncio
 from PIL import Image
 import requests
-from dotenv import dotenv_values
+from dotenv import load_dotenv
 import os
 from time import sleep as _sync_sleep
 import json
@@ -14,8 +14,8 @@ env_path = os.path.join(base_dir, ".env")
 status_file = os.path.join(base_dir, "Frontend", "Files", "Status.data")
 
 # Load environment variables
-env_vars = dotenv_values(env_path)
-HuggingFaceAPIKey = env_vars.get("HuggingFaceAPIKey")
+load_dotenv()
+HuggingFaceAPIKey = os.getenv("HuggingFaceAPIKey")
 
 # Pollinations models (free, no key needed)
 POLLINATIONS_MODELS = ["flux", "turbo", "flux-realism", "flux-anime"]
