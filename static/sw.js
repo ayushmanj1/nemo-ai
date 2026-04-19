@@ -1,11 +1,11 @@
-const CACHE_NAME = 'thing-ai-v1.0.3';
+const CACHE_NAME = 'thing-ai-v1.1.0';
 const ASSETS_TO_CACHE = [
   '/',
-  '/static/icon-192.png?v=1.0.3',
-  '/static/icon-512.png?v=1.0.3',
+  '/manifest.json',
+  '/static/icon-192.png',
+  '/static/icon-512.png',
   'https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap'
 ];
-
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -28,16 +28,22 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // We only cache GET requests
   if (event.request.method !== 'GET') return;
 
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) return cachedResponse;
-
-      return fetch(event.request).catch(() => {
-        // Optional: Return a custom offline page
-      });
-    })
-  );
+  // Simple Network-First strategy for application logic, 
+  // Cache-First for static assets
+  const url = new URL(event.request.url);
+  if (ASSETS_TO_CACHE.includes(url.pathname)) {
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        return cachedResponse || fetch(event.request);
+      })
+    );
+  } else {
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        return caches.match(event.request);
+      })
+    );
+  }
 });
