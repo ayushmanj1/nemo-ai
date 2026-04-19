@@ -1,10 +1,11 @@
-const CACHE_NAME = 'thing-ai-v1';
+const CACHE_NAME = 'thing-ai-v1.0.1';
 const ASSETS_TO_CACHE = [
   '/',
-  '/static/icon-192.png',
-  '/static/icon-512.png',
+  '/static/icon-192.png?v=1.0.1',
+  '/static/icon-512.png?v=1.0.1',
   'https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap'
 ];
+
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -33,7 +34,7 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) return cachedResponse;
-      
+
       return fetch(event.request).catch(() => {
         // Optional: Return a custom offline page
       });
