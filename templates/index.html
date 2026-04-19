@@ -1275,31 +1275,23 @@
           const item = wordQueue.shift();
           
           if (item.type === 'chunk') {
-            // Split chunk into words to maintain "word by word" feel
-            const words = item.content.split(' ');
-            for (let i = 0; i < words.length; i++) {
-              const word = words[i];
-              const prefix = (aiBubble.innerText.length > 0 && !aiBubble.innerHTML.endsWith(' ') && !aiBubble.innerHTML.endsWith('<br>')) ? ' ' : '';
-              
-              // Use a temporary div to handle formatting safely
-              const tempFull = aiBubble.getAttribute('data-raw') || '';
-              const newFull = tempFull + prefix + word;
-              aiBubble.setAttribute('data-raw', newFull);
-              
-              // Apply formatting (code blocks etc)
-              aiBubble.innerHTML = formatCodeDuringStreaming(newFull);
-              
-              // Haptic feedback
-              if ('vibrate' in navigator) {
-                // Short, sharp pulse for realism
-                navigator.vibrate(8);
-              }
-              
-              scrollBottom();
-              // Small delay for "realistic" pace, slightly faster if queue is backing up
-              const delay = wordQueue.length > 10 ? 10 : 35;
-              await new Promise(r => setTimeout(r, delay));
-            }
+            // Append chunk directly. AI sends its own spaces when needed.
+            // Splitting by ' ' was causing issues like "a yu" instead of "ayu".
+            const chunk = item.content;
+            const tempFull = aiBubble.getAttribute('data-raw') || '';
+            const newFull = tempFull + chunk;
+            aiBubble.setAttribute('data-raw', newFull);
+            
+            // Apply formatting (code blocks etc)
+            aiBubble.innerHTML = formatCodeDuringStreaming(newFull);
+            
+            // Haptic feedback
+            if ('vibrate' in navigator) navigator.vibrate(8);
+            
+            scrollBottom();
+            // Small delay for "realistic" pace
+            const delay = wordQueue.length > 10 ? 5 : 20;
+            await new Promise(r => setTimeout(r, delay));
           } else if (item.type === 'reply') {
             // Direct HTML (images, etc) - show instantly
             aiBubble.innerHTML += item.content;
