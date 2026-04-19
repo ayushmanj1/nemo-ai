@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 DefaultUsername = os.getenv("Username", "User")
-Assistantname = os.getenv("Assistantname", "Nemo")
+Assistantname = os.getenv("Assistantname", "Thing")
 GroqAPIKey = os.getenv("GroqAPIKey")
 CohereAPIKey = os.getenv("CohereAPIKey")
 

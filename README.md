@@ -1,6 +1,6 @@
-# Nemo AI
+# Thing AI
 
-Nemo is a powerful, lightweight, text-only AI assistant designed for headless cloud deployment. It features real-time web search capabilities and an aesthetic, high-energy web interface.
+Thing is a powerful, lightweight, text-only AI assistant designed for headless cloud deployment. It features real-time web search capabilities and an aesthetic, high-energy web interface.
 
 ## ✨ Features
 - **Real-time Search**: Powered by DuckDuckGo and Google Search for up-to-the-minute information.
@@ -25,7 +25,7 @@ Nemo is a powerful, lightweight, text-only AI assistant designed for headless cl
    GROQ_API_KEY=your_key_here
    COHERE_API_KEY=your_key_here
    Username=YourName
-   Assistantname=Nemo
+   Assistantname=Thing
    ```
 4. Run the application:
    ```bash

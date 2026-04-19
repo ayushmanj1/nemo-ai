@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nemo AI</title>
+  <title>Thing AI</title>
   <link
     href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap"
     rel="stylesheet" />
@@ -666,8 +666,8 @@
   <div id="auth-guard" style="display: none;">
     <div class="guard-content">
       <div class="logo-icon" style="width: 60px; height: 60px; font-size: 30px; margin: 0 auto 24px;">✦</div>
-      <h1 class="guard-title">Unlock Nemo AI</h1>
-      <p class="guard-desc">Sign up or login to explore the power of Nemo AI. Get instant answers, generate stunning art, and much more.</p>
+      <h1 class="guard-title">Unlock Thing AI</h1>
+      <p class="guard-desc">Sign up or login to explore the power of Thing AI. Get instant answers, generate stunning art, and much more.</p>
       <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
         <button id="guard-sign-up-btn">Sign Up to Use</button>
         <button id="guard-sign-in-btn">Sign In</button>
@@ -681,7 +681,7 @@
       <div class="logo">
         <div class="logo-icon">✦</div>
         <div class="logo-text-group">
-          Nemo AI
+          Thing AI
           <span class="logo-subtext">Designed by Ayushman</span>
         </div>
       </div>
@@ -741,7 +741,7 @@
 
     <div class="control-panel">
       <div class="input-wrapper">
-        <input type="text" id="text-input" placeholder="Ask Nemo anything..." />
+        <input type="text" id="text-input" placeholder="Ask Thing anything..." />
         <button id="send-btn" title="Send Message">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <line x1="22" y1="2" x2="11" y2="13"></line>
@@ -958,7 +958,7 @@
       row.className = `msg-row ${role} ${role === 'ai' ? 'new-msg' : ''}`;
       const label = document.createElement('span');
       label.className = 'msg-label';
-      label.textContent = (role === 'ai' || role === 'nemo') ? 'Nemo' : 'You';
+      label.textContent = (role === 'ai' || role === 'thing') ? 'Thing' : 'You';
       const bubble = document.createElement('div');
       bubble.className = 'bubble';
       
@@ -968,7 +968,7 @@
       
       // If it's an AI message AND contains HTML (code blocks or images), show it instantly 
       // to preserve perfect alignment and avoid broken tags during typing.
-      if ((role === 'ai' || role === 'nemo') && !text.includes('<div') && !text.includes('<img')) {
+      if ((role === 'ai' || role === 'thing') && !text.includes('<div') && !text.includes('<img')) {
         typeText(bubble, text);
       } else {
         bubble.innerHTML = text;
@@ -1005,7 +1005,7 @@
       const row = document.createElement('div');
       row.className = 'msg-row ai'; row.id = 'typing-row';
       const label = document.createElement('span');
-      label.className = 'msg-label'; label.textContent = 'Nemo';
+      label.className = 'msg-label'; label.textContent = 'Thing';
       const bubble = document.createElement('div');
       bubble.className = 'bubble typing-indicator';
       bubble.innerHTML = '<span></span><span></span><span></span>';
@@ -1028,7 +1028,7 @@
       }
       isSending = true;
       showTyping();
-      setStatus('Nemo is thinking…', 'ai');
+      setStatus('Thing is thinking…', 'ai');
       try {
         currentFetchController = new AbortController();
         const timeout = setTimeout(() => currentFetchController.abort(), 120000);

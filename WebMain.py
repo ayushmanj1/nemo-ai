@@ -1,6 +1,6 @@
 """
-WebMain.py — Flask web server that connects the Nemo AI frontend
-to the existing Nemo AI backend (Model, Chatbot, RealtimeSearchEngine, Automation).
+WebMain.py — Flask web server that connects the Thing AI frontend
+to the existing Thing AI backend (Model, Chatbot, RealtimeSearchEngine, Automation).
 
 Run with:  python WebMain.py
 Then open: http://localhost:8000
@@ -24,7 +24,7 @@ if sys.stdout.encoding != 'utf-8':
 # ── Environment ──────────────────────────────────────────────────────────────
 load_dotenv(override=True)
 DefaultUsername      = os.getenv("Username", "Guest")
-Assistantname = os.getenv("Assistantname", "Nemo")
+Assistantname = os.getenv("Assistantname", "Thing")
 
 # ── File-based status helpers (legacy, kept for minimal changes) ──────────────
 current_dir = os.getcwd()
@@ -82,7 +82,7 @@ def QueryModifier(Query):
 
 # ── Flask app ────────────────────────────────────────────────────────────────
 app = Flask(__name__, template_folder="templates")
-app.secret_key = os.getenv("SECRET_KEY", "nemo_ai_session_secret_key_9918")
+app.secret_key = os.getenv("SECRET_KEY", "thing_ai_session_secret_key_9918")
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
@@ -259,5 +259,5 @@ def interrupt():
 # ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
-    print(f"Nemo AI — Cloud Web Interface Started on port {port}")
+    print(f"Thing AI — Cloud Web Interface Started on port {port}")
     app.run(host="0.0.0.0", port=port, debug=False, threaded=True)
