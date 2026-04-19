@@ -1,4 +1,4 @@
-const CACHE_NAME = 'thing-ai-v1.1.1';
+const CACHE_NAME = 'thing-ai-v1.1.2';
 const ASSETS_TO_CACHE = [
   '/',
   '/manifest.json',
@@ -30,9 +30,23 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
-  // Simple Network-First strategy for application logic, 
-  // Cache-First for static assets
   const url = new URL(event.request.url);
+  
+  // Network-First strategy for the root page to ensure updates are seen immediately
+  if (url.pathname === '/') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const clonedResponse = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clonedResponse));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Cache-First for static assets defined in ASSETS_TO_CACHE
   if (ASSETS_TO_CACHE.includes(url.pathname)) {
     event.respondWith(
       caches.match(event.request).then((cachedResponse) => {
@@ -40,6 +54,7 @@ self.addEventListener('fetch', (event) => {
       })
     );
   } else {
+    // Network-only (with cache fallback) for everything else
     event.respondWith(
       fetch(event.request).catch(() => {
         return caches.match(event.request);
