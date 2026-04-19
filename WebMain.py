@@ -116,6 +116,18 @@ def serve_data(filename):
     return response
 
 
+@app.route("/manifest.json")
+def serve_manifest():
+    return send_from_directory("static", "manifest.json")
+
+
+@app.route("/sw.js")
+def serve_sw():
+    response = send_from_directory("static", "sw.js")
+    response.headers['Service-Worker-Allowed'] = '/'
+    return response
+
+
 # ── POST /speak ──────────────────────────────────────────────────────────────
 @app.route("/speak", methods=["POST"])
 def speak():
