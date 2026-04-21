@@ -896,7 +896,7 @@
       }
 
       .suggestions {
-        grid-template-columns: 1fr; /* Single column on very small screens */
+        grid-template-columns: repeat(2, 1fr); /* 2x2 format on mobile */
         gap: 8px;
       }
       
@@ -1451,21 +1451,30 @@
       const voices = window.speechSynthesis.getVoices();
       
       // Look for common male voice names first
-      const maleVoiceNames = ['david', 'james', 'mark', 'daniel', 'matthew', 'guy', 'aaron'];
+      const maleVoiceNames = ['david', 'james', 'mark', 'daniel', 'matthew', 'guy', 'aaron', 'thomas', 'microsoft david', 'google us english male'];
       let preferred = voices.find(v => 
         v.lang.startsWith('en') && maleVoiceNames.some(name => v.name.toLowerCase().includes(name))
       );
 
-      // Fallback: any non-female Google voice or any English voice
+      // Fallback: search for 'male' or avoid 'female/samantha/zira'
       if (!preferred) {
          preferred = voices.find(v => 
+           v.lang.startsWith('en') && (v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('man'))
+         ) || voices.find(v => 
            v.name.includes('Google') && v.lang.startsWith('en') && !v.name.toLowerCase().includes('female') && !v.name.toLowerCase().includes('zira') && !v.name.toLowerCase().includes('samantha')
          ) || voices.find(v => 
            v.lang.startsWith('en') && v.localService === false && !v.name.toLowerCase().includes('female')
          ) || voices.find(v => v.lang.startsWith('en'));
       }
       
-      if (preferred) utterance.voice = preferred;
+      if (preferred) {
+        utterance.voice = preferred;
+        // If we found a explicitly male voice, pitch can be normal, otherwise lower it
+        const isLikelyMale = maleVoiceNames.some(name => preferred.name.toLowerCase().includes(name)) || preferred.name.toLowerCase().includes('male');
+        utterance.pitch = isLikelyMale ? 0.9 : 0.75; 
+      } else {
+        utterance.pitch = 0.75; // Heavy fallback pitch reduction
+      }
 
       // Show stop button
       stopTtsBtn.style.display = 'flex';
