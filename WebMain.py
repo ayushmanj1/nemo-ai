@@ -207,7 +207,7 @@ def speak():
                 break
 
             try:
-                print(f"[WebMain] Executing task: {task}")
+                print(f"[WebMain] 🚀 Executing task: '{task}'")
                 if "generate image" in task:
                     prompt = task.replace("generate image", "").strip()
                     yield json.dumps({"reply": f"Generating images for '{prompt}'...", "status": "working"}) + "\n"

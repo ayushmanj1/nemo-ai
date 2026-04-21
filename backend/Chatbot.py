@@ -35,6 +35,7 @@ You are currently chatting with {user_name}.
 3. **TONE**: Be professional, supportive, and helpful.
 4. **COMPREHENSIVENESS**: Match your level of detail to the user's intent.
 5. **RESTRICTIONS**: Reply in English only. Do not mention your training data or AI nature unless asked.
+6. **REAL-TIME DATA**: NEVER say "I cannot access real-time data." If you don't have search results provided, simply answer to the best of your general knowledge.
 """
     if document_context:
         base_prompt += f"""

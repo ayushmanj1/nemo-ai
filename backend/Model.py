@@ -28,6 +28,22 @@ funcs = [
     "exit", "general", "realtime", "generate image", "content"
 ]
 
+# --- REAL-TIME KEYWORDS FOR FAST DETECTION ---
+REALTIME_KEYWORDS = [
+    "weather", "news", "price", "stock", "score", "match", "live", "today", "now",
+    "current", "latest", "update", "who is", "what is", "happening", "temperature", 
+    "gold", "silver", "bitcoin", "ipl", "football", "cricket", "president", 
+    "prime minister", "governor", "ceo", "releasing", "movie", "match today"
+]
+
+def is_realtime_query(query):
+    query_lower = query.lower()
+    # Check if any keyword is in the query
+    for keyword in REALTIME_KEYWORDS:
+        if keyword in query_lower:
+            return True
+    return False
+
 # Define the preamble that guides the AI model on how to categorize queries.
 # Load assistant name for categorization layer
 Assistantname = os.getenv("Assistantname", "Thing")
@@ -82,6 +98,11 @@ ChatHistory = [
 
 # Define the main function for decision-making on queries.
 def FirstLayerDMM(prompt: str = "test"):
+    # 1. Fast Pass: Keyword-based real-time detection
+    if is_realtime_query(prompt):
+        print(f"[Model] Fast Pass: Real-time query detected for '{prompt}'")
+        return ["realtime " + prompt]
+
     try:
         if not co: return ["general " + prompt]
         
