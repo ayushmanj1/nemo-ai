@@ -1,4 +1,5 @@
 import cohere
+import re
 from rich import print
 from dotenv import load_dotenv
 import os
@@ -33,14 +34,16 @@ REALTIME_KEYWORDS = [
     "weather", "news", "price", "stock", "score", "match", "live", "today", "now",
     "current", "latest", "update", "who is", "what is", "happening", "temperature", 
     "gold", "silver", "bitcoin", "ipl", "football", "cricket", "president", 
-    "prime minister", "governor", "ceo", "releasing", "movie", "match today"
+    "prime minister", "governor", "ceo", "releasing", "movie", "match today",
+    "cm", "pm", "chief minister", "minister", "capital", "population", "born", 
+    "death", "alive", "richest", "top 10", "standing", "points table", "result"
 ]
 
 def is_realtime_query(query):
     query_lower = query.lower()
-    # Check if any keyword is in the query
+    # Check if any keyword matches as a whole word or significant part
     for keyword in REALTIME_KEYWORDS:
-        if keyword in query_lower:
+        if re.search(r'\b' + re.escape(keyword) + r'\b', query_lower):
             return True
     return False
 

@@ -837,6 +837,114 @@
       }
     }
 
+    /* ── Voice / Mic Button Styles ── */
+    #mic-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--accent);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    #mic-btn:hover {
+      background: var(--accent);
+      color: #000;
+      transform: scale(1.05);
+      box-shadow: 0 0 15px var(--glow);
+    }
+
+    #mic-btn.listening {
+      background: var(--red);
+      border-color: var(--red);
+      color: #fff;
+      box-shadow: 0 0 20px var(--red-glow);
+      animation: micPulse 1.5s ease-in-out infinite;
+    }
+
+    #mic-btn.listening:hover {
+      background: #dc2626;
+      color: #fff;
+    }
+
+    @keyframes micPulse {
+      0%, 100% { box-shadow: 0 0 10px var(--red-glow); transform: scale(1); }
+      50% { box-shadow: 0 0 30px var(--red-glow), 0 0 60px rgba(239, 68, 68, 0.15); transform: scale(1.08); }
+    }
+
+    #mic-btn svg {
+      width: 20px;
+      height: 20px;
+      transition: transform 0.2s;
+    }
+
+    .voice-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: var(--red);
+      font-weight: 500;
+      letter-spacing: 0.04em;
+    }
+
+    .voice-status .voice-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--red);
+      animation: voiceDotPulse 1s ease-in-out infinite;
+    }
+
+    @keyframes voiceDotPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.7); }
+    }
+
+    /* TTS Stop Button */
+    #stop-tts-btn {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--accent);
+      background: rgba(250, 204, 21, 0.1);
+      color: var(--accent);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    #stop-tts-btn:hover {
+      background: var(--accent);
+      color: #000;
+    }
+
+    #stop-tts-btn svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    @media (max-width: 768px) {
+      #mic-btn {
+        width: 42px;
+        height: 42px;
+      }
+    }
+
   </style>
 </head>
 
@@ -932,6 +1040,14 @@
         </button>
         <input type="file" id="file-input" multiple accept=".pdf,.docx,.txt" style="display: none;" />
         <input type="text" id="text-input" placeholder="Ask Thing anything..." />
+        <button id="mic-btn" title="Voice Input">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+            <line x1="12" y1="19" x2="12" y2="23"></line>
+            <line x1="8" y1="23" x2="16" y2="23"></line>
+          </svg>
+        </button>
         <button id="send-btn" title="Send Message">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
             stroke-linejoin="round">
@@ -940,7 +1056,15 @@
           </svg>
         </button>
       </div>
-      <div id="status">Type your message below...</div>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div id="status">Type your message below...</div>
+        <button id="stop-tts-btn" title="Stop Speaking">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <rect x="6" y="6" width="12" height="12" rx="2"></rect>
+          </svg>
+          Stop Speaking
+        </button>
+      </div>
     </div>
 
   </div>
@@ -1116,6 +1240,194 @@
     
     let selectedFiles = [];
     let isSending = false;
+    let usedMic = false; // Track if last message was voice-initiated
+
+    // ══════════════════════════════════════════
+    //  VOICE INPUT — SpeechRecognition
+    // ══════════════════════════════════════════
+    const micBtn = document.getElementById('mic-btn');
+    const stopTtsBtn = document.getElementById('stop-tts-btn');
+    let recognition = null;
+    let isListening = false;
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (SpeechRecognition) {
+      recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = true;
+      recognition.continuous = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        isListening = true;
+        micBtn.classList.add('listening');
+        micBtn.title = 'Stop Listening';
+        setStatus('<span class="voice-status"><span class="voice-dot"></span> Listening… speak now</span>', '');
+        textInput.placeholder = 'Listening…';
+      };
+
+      recognition.onresult = (event) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+
+        // Show interim text in input field
+        if (interimTranscript) {
+          textInput.value = interimTranscript;
+        }
+
+        // When final transcript is ready, send it
+        if (finalTranscript.trim()) {
+          textInput.value = finalTranscript.trim();
+          usedMic = true;
+          stopListening();
+          // Small delay for visual feedback before sending
+          setTimeout(() => sendTextInput(), 300);
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.warn('SpeechRecognition error:', event.error);
+        stopListening();
+        if (event.error === 'no-speech') {
+          setStatus('No speech detected. Try again.', '');
+        } else if (event.error === 'not-allowed') {
+          setStatus('Microphone access denied. Check permissions.', 'warn');
+        } else {
+          setStatus('Voice error: ' + event.error, 'warn');
+        }
+        setTimeout(() => setStatus('Type your message below...', ''), 3000);
+      };
+
+      recognition.onend = () => {
+        stopListening();
+      };
+    } else {
+      // Browser does not support SpeechRecognition
+      micBtn.title = 'Voice input not supported';
+      micBtn.style.opacity = '0.35';
+      micBtn.style.cursor = 'not-allowed';
+    }
+
+    function startListening() {
+      if (!recognition) {
+        alert('Voice input not supported on this device. Please use Chrome or Edge.');
+        return;
+      }
+      if (isSending) return;
+      // Cancel any ongoing TTS
+      window.speechSynthesis.cancel();
+      stopTtsBtn.style.display = 'none';
+      
+      try {
+        recognition.start();
+      } catch (e) {
+        // Already started, ignore
+      }
+    }
+
+    function stopListening() {
+      isListening = false;
+      micBtn.classList.remove('listening');
+      micBtn.title = 'Voice Input';
+      textInput.placeholder = 'Ask Thing anything...';
+      try { recognition && recognition.stop(); } catch (e) { }
+    }
+
+    micBtn.addEventListener('click', () => {
+      if ('vibrate' in navigator) navigator.vibrate(12);
+      if (isListening) {
+        stopListening();
+        setStatus('Type your message below...', '');
+      } else {
+        startListening();
+      }
+    });
+
+    // ══════════════════════════════════════════
+    //  VOICE OUTPUT — SpeechSynthesis (TTS)
+    // ══════════════════════════════════════════
+    function speakText(text) {
+      if (!window.speechSynthesis) return;
+
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
+
+      // Strip HTML tags, code blocks, and clean up for natural speech
+      let cleanText = text
+        .replace(/<div class="code-container">.*?<\/div>/gs, ' code block omitted ')
+        .replace(/<[^>]*>/g, '')
+        .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
+        .replace(/```[\s\S]*?```/g, ' code block omitted ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      if (!cleanText) return;
+
+      // Limit length for performance (long texts can freeze TTS)
+      if (cleanText.length > 1500) {
+        cleanText = cleanText.substring(0, 1500) + '... and more.';
+      }
+
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      utterance.rate = 1.0;
+      utterance.pitch = 0.9; // Slightly lower pitch for a deeper/male tone effect
+      utterance.volume = 1.0;
+
+      // Pick a natural-sounding male voice if available
+      const voices = window.speechSynthesis.getVoices();
+      
+      // Look for common male voice names first
+      const maleVoiceNames = ['david', 'james', 'mark', 'daniel', 'matthew', 'guy', 'aaron'];
+      let preferred = voices.find(v => 
+        v.lang.startsWith('en') && maleVoiceNames.some(name => v.name.toLowerCase().includes(name))
+      );
+
+      // Fallback: any non-female Google voice or any English voice
+      if (!preferred) {
+         preferred = voices.find(v => 
+           v.name.includes('Google') && v.lang.startsWith('en') && !v.name.toLowerCase().includes('female') && !v.name.toLowerCase().includes('zira') && !v.name.toLowerCase().includes('samantha')
+         ) || voices.find(v => 
+           v.lang.startsWith('en') && v.localService === false && !v.name.toLowerCase().includes('female')
+         ) || voices.find(v => v.lang.startsWith('en'));
+      }
+      
+      if (preferred) utterance.voice = preferred;
+
+      // Show stop button
+      stopTtsBtn.style.display = 'flex';
+
+      utterance.onend = () => {
+        stopTtsBtn.style.display = 'none';
+      };
+
+      utterance.onerror = () => {
+        stopTtsBtn.style.display = 'none';
+      };
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    stopTtsBtn.addEventListener('click', () => {
+      window.speechSynthesis.cancel();
+      stopTtsBtn.style.display = 'none';
+    });
+
+    // Pre-load voices (some browsers need this)
+    if (window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        window.speechSynthesis.getVoices();
+      };
+    }
 
     // ── File Handling ──
     attachBtn.addEventListener('click', () => {
@@ -1398,6 +1710,12 @@
           await new Promise(r => setTimeout(r, 100));
         }
 
+        // If the message was sent via mic, speak the final response
+        if (usedMic && aiBubble) {
+          const rawText = aiBubble.getAttribute('data-raw') || aiBubble.innerText || '';
+          speakText(rawText);
+        }
+
       } catch (err) {
         removeTyping();
         if (err.name === 'AbortError') {
@@ -1408,6 +1726,7 @@
         }
       } finally {
         isSending = false;
+        usedMic = false;
         selectedFiles = [];
         renderAttachments();
         setStatus('Type your message below...', '');
@@ -1454,6 +1773,10 @@
         welcomeHero.style.display = 'none';
       }
 
+      // Cancel any ongoing TTS when user sends a new message
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      stopTtsBtn.style.display = 'none';
+
       textInput.value = '';
       
       let displayMsg = text;
@@ -1461,6 +1784,11 @@
         const fileNames = selectedFiles.map(f => f.name).join(', ');
         if (!text) displayMsg = `[Attached: ${fileNames}]`;
         else displayMsg = `${text} <br><small style="color:var(--muted)">Attached: ${fileNames}</small>`;
+      }
+
+      // Add mic icon indicator if voice was used
+      if (usedMic) {
+        displayMsg = `<span style="color:var(--accent); margin-right: 6px;">🎤</span> ${displayMsg}`;
       }
       
       addBubble('you', displayMsg);

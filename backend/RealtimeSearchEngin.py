@@ -572,24 +572,26 @@ def RealtimeSearchEngine(prompt, provided_messages=None, user_name=None):
     system_content = GetSystemMessage(user_name)
 
     # Build a RAG-style user message with search context embedded
-    rag_user_message = f"""I need you to answer my question using ONLY the real-time search results provided below. 
-Do NOT use your training data or prior knowledge for factual answers. The search results are LIVE as of {now.strftime('%B %d, %Y at %H:%M')}.
-
---- LIVE SEARCH RESULTS (just retrieved) ---
+    rag_user_message = f"""### REAL-TIME SEARCH RESULTS (As of {now.strftime('%B %d, %Y')}) ###
 {search_data}
---- END OF SEARCH RESULTS ---
+----------------------------------
 
-Current Date/Time: {date_info}
+### INSTRUCTIONS ###
+1. Answer the question using ONLY the provided search results.
+2. The search results above are LIVE and CORRECT. If they contradict your knowledge (e.g., about leaders, prices, dates), TRUST THE SEARCH RESULTS.
+3. Your training data is OUTDATED. Do NOT use it.
+4. If the results say Rekha Gupta is CM, she is CM. If they say gold is $2k, it is $2k.
 
-My question: {prompt}
+Question: {prompt}
+"""
 
-REMEMBER: Answer based on the search results above. Your training data is outdated — the search results are current and correct."""
+    print(f"[RealtimeSearchEngine] 🤖 Calling LLM with AGGRESSIVE RAG prompt...")
 
-    print(f"[RealtimeSearchEngine] 🤖 Calling LLM with RAG-style prompt...")
-
+    # We use a very low temperature for factual accuracy
+    # We pass a shorter history to prevent old answers from biasing the model
     Answer = ""
     chunk_count = 0
-    for chunk in UniversalAI(rag_user_message, system_prompt=system_content, history=provided_messages, temperature=0.1):
+    for chunk in UniversalAI(rag_user_message, system_prompt=system_content, history=provided_messages[-2:], temperature=0.0):
         Answer += chunk
         chunk_count += 1
         yield Answer
