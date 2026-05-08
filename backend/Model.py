@@ -55,10 +55,10 @@ preamble = f"""You are a highly accurate Decision-Making Model for {Assistantnam
 Your ONLY task is to categorize the user's query into one or more categories.
 
 *** CATEGORY LIST: ***
--> 'realtime (query)': For ANY factual info, news, weather, prices, or web searches. (PRIORITY)
--> 'general (query)': For greetings, jokes, personal/emotive chat, or general conversation.
--> 'content (topic)': For formal writing, code, essays, or long-form applications ONLY.
--> 'generate image (prompt)': To create images.
+-> 'realtime query': For ANY factual info, news, weather, prices, or web searches. (PRIORITY)
+-> 'general query': For greetings, jokes, personal/emotive chat, or general conversation.
+-> 'content topic': For formal writing, code, essays, or long-form applications ONLY.
+-> 'generate image prompt': To create images.
 
 *** MANDATORY RULES: ***
 1. ONLY respond with the tags mentioned above. 
@@ -66,7 +66,7 @@ Your ONLY task is to categorize the user's query into one or more categories.
 3. DO NOT explain your decision. 
 4. DO NOT provide any text other than the categorized tags.
 5. If the user query is multiple things, separate tags with a comma.
-6. If the user query matches NO specific task, always choose 'general (query)'.
+6. If the user query matches NO specific task, always choose 'general query'.
 """
 
 # Define a chat history with predefined user-chatbot interactions for context.

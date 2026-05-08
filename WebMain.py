@@ -68,21 +68,7 @@ def QueryModifier(Query):
     new_query = Query.lower().strip()
     if not new_query:
         return ""
-    query_words = new_query.split()
-    question_words = ["how", "what", "who", "where", "when", "why",
-                      "which", "whose", "whom", "can you", "what's",
-                      "where's", "how's"]
-    if any(word + " " in new_query for word in question_words):
-        if query_words[-1][-1] in ['.', '?', '!']:
-            new_query = new_query[:-1] + "?"
-        else:
-            new_query += "?"
-    else:
-        if query_words[-1][-1] in ['.', '?', '!']:
-            new_query = new_query[:-1] + "."
-        else:
-            new_query += "."
-    return new_query.capitalize()
+    return new_query[0].upper() + new_query[1:]
 
 
 # ── Flask app ────────────────────────────────────────────────────────────────
@@ -223,8 +209,13 @@ def speak():
                     else:
                         yield json.dumps({"reply": "Image generation failed.", "status": "error"}) + "\n"
 
-                elif any(tag in task for tag in ["realtime", "general", "content"]):
-                    clean_query = task.replace("realtime", "").replace("general", "").replace("content", "").strip()
+                elif any(tag in task.lower() for tag in ["realtime", "general", "content"]):
+                    # Robust cleaning: remove tags and any surrounding parentheses
+                    clean_query = task.lower()
+                    for tag in ["realtime", "general", "content"]:
+                        clean_query = clean_query.replace(tag, "")
+                    
+                    clean_query = clean_query.strip().strip("()").strip()
                     modified_query = QueryModifier(clean_query)
                     
                     if "realtime" in task:

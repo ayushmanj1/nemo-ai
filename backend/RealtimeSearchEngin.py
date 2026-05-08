@@ -410,9 +410,9 @@ def GoogleSearch(query, query_types=None):
         news_results = fetch_google_news_rss(news_query)
         results.extend(news_results)
 
-    # --- DDGS SEARCH (general web search) ---
+    # --- DUCKDUCKGO SEARCH (general web search) ---
     try:
-        from ddgs import DDGS
+        from duckduckgo_search import DDGS
         with DDGS() as ddgs:
             # For current affairs / temporal, prioritize news over text
             if "current_affairs" in query_types or "temporal" in query_types:
@@ -471,21 +471,6 @@ def GoogleSearch(query, query_types=None):
                             })
                     except Exception as e:
                         print(f"[GoogleSearch] DDGS News Error: {e}")
-    except ImportError:
-        print("[GoogleSearch] ⚠️ ddgs package not found, trying legacy...")
-        try:
-            from duckduckgo_search import DDGS
-            with DDGS() as ddgs:
-                ddgs_gen = ddgs.text(query, max_results=5)
-                if ddgs_gen:
-                    for r in ddgs_gen:
-                        results.append({
-                            'title': r.get('title', 'No Title'),
-                            'body': r.get('body', 'No Description'),
-                            'href': r.get('href', '#')
-                        })
-        except Exception as e:
-            print(f"[GoogleSearch] Legacy DDG Error: {e}")
     except Exception as e:
         print(f"[GoogleSearch] DDGS Error: {e}")
 
@@ -519,12 +504,12 @@ def GoogleSearch(query, query_types=None):
         try:
             from googlesearch import search
             g_query = enhance_query_for_recency(query) if ("current_affairs" in query_types or "temporal" in query_types) else query
-            google_results = list(search(g_query, num_results=5, advanced=True))
+            google_results = search(g_query, num_results=5)
             for r in google_results:
                 results.append({
-                    'title': "[GOOGLE] " + getattr(r, 'title', 'No Title'),
-                    'body': getattr(r, 'description', 'No Description'),
-                    'href': getattr(r, 'url', '#')
+                    'title': "[GOOGLE] " + query,
+                    'body': "Search result for " + query,
+                    'href': r if isinstance(r, str) else getattr(r, 'url', '#')
                 })
         except Exception as ge:
             print(f"[GoogleSearch] Google Search Error: {ge}")

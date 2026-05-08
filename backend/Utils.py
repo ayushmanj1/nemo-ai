@@ -93,7 +93,7 @@ def UniversalAI(prompt, system_prompt=None, history=None, stream=True, temperatu
                     message=prompt,
                     preamble=system_prompt,
                     # Cohere handles history differently, but for simplicity we keep it as is or adapt
-                    chat_history=[{"role": m["role"].upper() if m["role"] != "system" else "SYSTEM", "message": m["content"]} for m in history[-5:]],
+                chat_history=[{"role": m["role"].upper() if m["role"].lower() == "user" else "CHATBOT", "message": m["content"]} for m in history[-5:]],
                     connectors=[]
                 )
                 for event in stream_resp:
@@ -105,7 +105,7 @@ def UniversalAI(prompt, system_prompt=None, history=None, stream=True, temperatu
                     model="command-r-plus-08-2024",
                     message=prompt,
                     preamble=system_prompt,
-                    chat_history=[{"role": m["role"].upper() if m["role"] != "system" else "SYSTEM", "message": m["content"]} for m in history[-5:]]
+                    chat_history=[{"role": m["role"].upper() if m["role"].lower() == "user" else "CHATBOT", "message": m["content"]} for m in history[-5:]]
                 )
                 return resp.text
         except Exception as e:
