@@ -2452,8 +2452,6 @@
       /* --- Overlay --- */
       #sb-overlay.active {
         display: block;
-        -webkit-backdrop-filter: blur(6px);
-        backdrop-filter: blur(6px);
       }
 
       /* --- Header --- */
@@ -2895,14 +2893,21 @@
         }
       }
     }
+
+    /* --- Hide chips on mobile UI --- */
+    @media (max-width: 768px) {
+      #inspiration-chip,
+      .model-selector-wrap {
+        display: none !important;
+      }
+    }
   </style>
 </head>
 
 <body>
-  <!-- Mobile overlay -->
-  <div id="sb-overlay"></div>
-
   <div id="app-shell">
+    <!-- Mobile overlay -->
+    <div id="sb-overlay"></div>
 
   <!-- ═══════════════════════════════
        LEFT SIDEBAR
