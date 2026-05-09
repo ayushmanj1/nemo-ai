@@ -29,6 +29,8 @@
 
   <!-- Manifest Link -->
   <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css" id="hljs-theme">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
   <script>
     // Set theme before paint to avoid flash
     const savedTheme = localStorage.getItem('theme');
@@ -60,6 +62,9 @@
       --sidebar-width-collapsed: 64px;
       --hover-bg: rgba(0, 0, 0, 0.05);
       --hover-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      --code-bg: #fdf6e3;
+      --code-text: #111827;
+      --code-header-bg: rgba(0, 0, 0, 0.04);
     }
 
     [data-theme="dark"] {
@@ -75,6 +80,9 @@
       --sidebar-width-expanded: 260px;
       --sidebar-width-collapsed: 64px;
       --hover-shadow: 0 4px 12px rgba(0,0,0,0.35);
+      --code-bg: #000000;
+      --code-text: #d1d5db;
+      --code-header-bg: rgba(255, 255, 255, 0.05);
     }
 
     /* ══════════════════════════════════════════
@@ -94,10 +102,10 @@
       width: var(--sidebar-width-expanded);
       height: 100vh;
       background: #ffffff;
-      border-right: 1px solid var(--border);
+      border-right: none;
       display: flex;
       flex-direction: column;
-      transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease;
+      transition: width 0.4s cubic-bezier(0.25, 1, 0.5, 1), background 0.4s ease;
       overflow: hidden;
       position: relative;
       z-index: 100;
@@ -107,12 +115,16 @@
 
     [data-theme="dark"] #chat-sidebar {
       background: #0a0a0a;
-      border-right-color: rgba(255,255,255,0.08);
+      border-right: none;
       color: #ececec;
     }
 
     #chat-sidebar.collapsed {
       width: var(--sidebar-width-collapsed);
+      border-right: 1px solid var(--border);
+    }
+    [data-theme="dark"] #chat-sidebar.collapsed {
+      border-right: 1px solid rgba(255,255,255,0.08);
     }
 
     /* Light mode sidebar text */
@@ -142,17 +154,22 @@
     #chat-sidebar .sb-profile-row:hover,
     #chat-sidebar .sb-capsule:hover {
       background: #e2e8f0 !important;
+      transform: scale(1.03);
+      z-index: 10;
     }
     
     #chat-sidebar .sb-capsule {
-      background: #ffffff !important;
-      border: 1px solid #f1f5f9 !important;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
     }
     
     #chat-sidebar .sb-capsule.active {
-      background: #ffffff !important;
-      border: 1px solid var(--sb-accent) !important;
-      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.08) !important;
+      background: rgba(0, 0, 0, 0.04) !important;
+      border: none !important;
+      border-left: 3px solid #d1d5db !important;
+      border-radius: 4px !important;
+      box-shadow: none !important;
     }
 
     /* ── Dark mode sidebar overrides ── */
@@ -182,17 +199,22 @@
     [data-theme="dark"] #chat-sidebar .sb-profile-row:hover,
     [data-theme="dark"] #chat-sidebar .sb-capsule:hover {
       background: rgba(255,255,255,0.08) !important;
+      transform: scale(1.03);
+      z-index: 10;
     }
 
     [data-theme="dark"] #chat-sidebar .sb-capsule {
-      background: #141414 !important;
-      border: 1px solid rgba(255,255,255,0.06) !important;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
     }
 
     [data-theme="dark"] #chat-sidebar .sb-capsule.active {
-      background: rgba(6, 182, 212, 0.08) !important;
-      border: 1px solid var(--sb-accent) !important;
-      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.12) !important;
+      background: rgba(255, 255, 255, 0.05) !important;
+      border: none !important;
+      border-left: 3px solid rgba(255, 255, 255, 0.2) !important;
+      border-radius: 4px !important;
+      box-shadow: none !important;
     }
 
     [data-theme="dark"] #chat-sidebar .sb-capsule-delete {
@@ -291,9 +313,11 @@
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; transition: all 0.2s ease;
     }
-    .sb-toggle-btn:hover { background: var(--hover-bg); transform: scale(1.05); }
-    .sb-toggle-btn svg { width: 18px; height: 18px; transition: transform 0.3s ease; }
+    .sb-toggle-btn:hover { background: var(--hover-bg); transform: scale(1.1) rotate(90deg); color: var(--sb-accent); }
+    .sb-toggle-btn svg { width: 18px; height: 18px; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
     #chat-sidebar.collapsed .sb-toggle-btn svg { transform: rotate(180deg); }
+    #chat-sidebar.collapsed .sb-toggle-btn:hover { transform: scale(1.1) rotate(270deg); }
+    .sb-toggle-btn:active { transform: scale(0.8) !important; transition: transform 0.1s; }
 
     .sb-main-card {
       margin: 4px 10px 8px 10px;
@@ -348,7 +372,62 @@
       box-shadow: var(--hover-shadow);
     }
     .sb-ctrl-btn:active { transform: scale(0.97); }
-    .sb-ctrl-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+    .sb-ctrl-btn svg { width: 20px; height: 20px; flex-shrink: 0; transition: transform 0.2s ease; }
+    
+    /* Micro-animations for Sidebar Icons */
+    @keyframes writeAnim {
+      0% { transform: scale(1.15) translate(0, 0); }
+      25% { transform: scale(1.15) translate(1px, -1px) rotate(-8deg); }
+      50% { transform: scale(1.15) translate(-1px, 1px) rotate(8deg); }
+      75% { transform: scale(1.15) translate(1px, 1px) rotate(-4deg); }
+      100% { transform: scale(1.15) translate(0, 0); }
+    }
+    #sb-new-chat-icon:hover svg { animation: writeAnim 0.5s infinite; color: var(--sb-accent) !important; }
+
+    @keyframes searchPan {
+      0% { transform: scale(1.15) translate(0, 0); }
+      33% { transform: scale(1.15) translate(-1.5px, -1.5px); }
+      66% { transform: scale(1.15) translate(1.5px, 1.5px); }
+      100% { transform: scale(1.15) translate(0, 0); }
+    }
+    #sb-search-icon:hover svg { animation: searchPan 1.2s infinite alternate ease-in-out; color: var(--sb-accent) !important; }
+
+    @keyframes spinGear {
+      0% { transform: rotate(0deg) scale(0.9); }
+      100% { transform: rotate(180deg) scale(1); }
+    }
+    #sb-settings-icon:active svg { animation: spinGear 0.4s ease-out forwards; }
+    #sb-settings-icon:hover svg { transform: scale(1.1) rotate(15deg); color: var(--sb-accent) !important; }
+
+    @keyframes codeTextSwap {
+      0%, 45% { content: "hi"; }
+      50%, 95% { content: "div"; }
+      100% { content: "hi"; }
+    }
+    #sb-code-editor-icon .code-easter-text {
+      position: absolute;
+      font-size: 8px; font-family: monospace; font-weight: bold;
+      opacity: 0; color: var(--sb-accent); z-index: 1;
+      transition: opacity 0.3s ease;
+    }
+    #sb-code-editor-icon:hover .code-easter-text {
+      opacity: 1;
+    }
+    #sb-code-editor-icon:hover .code-easter-text::before {
+      content: "hi";
+      animation: codeTextSwap 2.5s infinite;
+    }
+    #sb-code-editor-icon svg polyline {
+      transition: transform 0.4s ease;
+    }
+    #sb-code-editor-icon:hover svg .code-arrow-right {
+      transform: translateX(4px);
+    }
+    #sb-code-editor-icon:hover svg .code-arrow-left {
+      transform: translateX(-4px);
+    }
+    #sb-code-editor-icon:hover svg { color: var(--sb-accent) !important; }
+
     #chat-sidebar.collapsed .sb-ctrl-btn { width: 44px; height: 44px; padding: 0; justify-content: center; gap: 0; }
 
     .sb-recents-section {
@@ -395,15 +474,15 @@
 
     /* Capsule chat items */
     .sb-capsule {
-      border-radius: 999px;
-      background: var(--capsule-bg);
-      padding: 9px 16px;
-      margin-bottom: 6px;
+      border-radius: 6px;
+      background: transparent;
+      padding: 10px 14px;
+      margin-bottom: 2px;
       font-size: 13px; font-weight: 400;
       color: var(--text-primary);
       overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
       cursor: pointer;
-      transition: all 0.18s ease;
+      transition: all 0.15s ease;
       display: flex; align-items: center; gap: 8px;
       position: relative;
       animation: fadeInUp 350ms ease-out both;
@@ -414,10 +493,11 @@
     }
     .sb-capsule:hover {
       background: var(--hover-bg);
-      transform: translateX(3px);
-      box-shadow: var(--hover-shadow);
+      transform: scale(1.03);
+      z-index: 10;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
-    .sb-capsule:active { transform: scale(0.98) translateX(3px); }
+    .sb-capsule:active { transform: scale(0.99); }
     .sb-capsule.active {
       border-left: 3px solid var(--sb-accent);
       background: var(--hover-bg);
@@ -519,13 +599,38 @@
       border: 1px solid rgba(255,255,255,0.1) !important;
       color: #ececec !important;
     }
-    #sb-search-input:focus { border-color: var(--sb-accent) !important; box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15) !important; }
+    #sb-search-input:focus { 
+      border-color: #94a3b8 !important; 
+      box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.15) !important; 
+    }
     #sb-search-input::placeholder { color: var(--text-muted); }
 
     .sb-search-clear { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; border-radius: 50%; border: none; background: var(--capsule-bg); color: var(--text-muted); display: none; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; }
     .sb-search-clear.visible { display: flex; }
     .sb-search-clear:hover { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
     .sb-search-clear svg { width: 12px; height: 12px; }
+
+    .sb-search-back-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 8px;
+      margin-left: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+    .sb-search-back-btn:hover {
+      background: var(--hover-bg);
+      color: var(--text);
+    }
+    .sb-search-back-btn svg {
+      width: 18px;
+      height: 18px;
+    }
 
     .sb-search-results { margin-top: 12px; flex: 1; overflow-y: auto; overflow-x: hidden; }
     .sb-search-results::-webkit-scrollbar { width: 4px; }
@@ -551,7 +656,7 @@
       flex: 1; min-width: 0; position: relative; z-index: 1;
       display: flex; flex-direction: column; height: 100dvh;
       max-width: none; width: 100%; margin: 0; padding: 0 24px;
-      transition: margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: flex 0.4s cubic-bezier(0.25, 1, 0.5, 1), margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     /* ── Mobile overlay ── */
@@ -812,10 +917,16 @@
       transition: all 0.2s ease;
     }
 
+    @keyframes shieldShine {
+      0% { transform: scale(1); filter: drop-shadow(0 0 0 transparent); }
+      50% { transform: scale(1.2); filter: drop-shadow(0 0 8px var(--sb-accent)); color: var(--sb-accent); }
+      100% { transform: scale(1.15); filter: drop-shadow(0 0 4px var(--sb-accent)); color: var(--sb-accent); }
+    }
     #privacy-toggle-btn:hover {
       background: transparent !important;
-      color: var(--text);
-      transform: scale(1.1);
+    }
+    #privacy-toggle-btn:hover svg {
+      animation: shieldShine 0.4s forwards;
     }
 
     [data-theme="dark"] #privacy-toggle-btn {
@@ -847,9 +958,18 @@
       color: #ffffff !important;
     }
 
+    @keyframes giftWiggle {
+      0% { transform: scale(1) rotate(0deg); }
+      25% { transform: scale(1.15) rotate(-10deg); }
+      50% { transform: scale(1.15) rotate(10deg); }
+      75% { transform: scale(1.15) rotate(-5deg); }
+      100% { transform: scale(1.15) rotate(0deg); color: #fbbf24; filter: drop-shadow(0 0 6px rgba(251,191,36,0.6)); }
+    }
     #plans-btn:hover {
-      transform: scale(1.1);
-      opacity: 0.8;
+      opacity: 1;
+    }
+    #plans-btn:hover svg {
+      animation: giftWiggle 0.5s forwards;
     }
 
     #settings-btn::after {
@@ -1202,6 +1322,14 @@
       word-wrap: break-word;
     }
 
+    .bubble img {
+      max-width: min(300px, 100%) !important;
+      height: auto !important;
+      border-radius: 12px;
+      margin-top: 10px;
+      display: block;
+    }
+
     .msg-row.ai .bubble {
       background: var(--ai-bg);
       align-self: flex-start;
@@ -1217,13 +1345,15 @@
       margin: 15px 0;
       border: 1px solid var(--border);
       border-radius: 12px;
-      background: #000;
+      background: var(--code-bg);
       overflow: hidden;
       font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      width: fit-content;
+      max-width: 100%;
     }
-
+    
     .code-header {
-      background: rgba(255, 255, 255, 0.05);
+      background: var(--code-header-bg);
       padding: 10px 16px;
       display: flex;
       justify-content: space-between;
@@ -1255,12 +1385,17 @@
     }
 
     .code-container pre {
-      padding: 18px;
+      padding: 12px 16px;
       margin: 0;
       overflow-x: auto;
-      font-size: 0.9rem;
-      line-height: 1.6;
-      color: #d6deeb;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      color: var(--code-text);
+    }
+    
+    .hljs {
+      background: transparent !important;
+      padding: 0 !important;
     }
 
     #interim-row {
@@ -2901,6 +3036,360 @@
         display: none !important;
       }
     }
+    /* --- File Attachment Chip --- */
+    .attachment-preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 0 16px 12px 16px;
+    }
+    .file-chip {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 12px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      position: relative;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      max-width: 250px;
+      animation: fadeIn 0.2s ease-out forwards;
+    }
+    [data-theme="dark"] .file-chip {
+      background: #1e1e1e;
+      border-color: #333;
+    }
+    .file-chip-icon {
+      width: 38px;
+      height: 38px;
+      background: #ef4444;
+      color: #fff;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .file-chip-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+    .file-chip-info {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      margin-right: 18px; /* space for close button */
+    }
+    .file-chip-name {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #171717;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-family: 'DM Sans', sans-serif;
+    }
+    [data-theme="dark"] .file-chip-name {
+      color: #ececec;
+    }
+    .file-chip-type {
+      font-size: 0.7rem;
+      color: #737373;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+    .remove-file {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      width: 22px;
+      height: 22px;
+      background: #171717;
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .remove-file:hover {
+      transform: scale(1.1);
+    }
+    [data-theme="dark"] .remove-file {
+      background: #ececec;
+      color: #171717;
+    }
+    .remove-file svg {
+      width: 12px;
+      height: 12px;
+    }
+    /* --- Code Editor Mode --- */
+    .editor-panel-view {
+      display: flex;
+      flex-direction: column;
+      flex: 0;
+      width: 0;
+      opacity: 0;
+      visibility: hidden;
+      height: 100%;
+      border-right: 1px solid var(--border);
+      min-width: 0;
+      background: var(--surface);
+      overflow: hidden;
+      transition: flex 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease;
+    }
+    #app-shell.editor-mode-active #editor-panel {
+      flex: 1;
+      opacity: 1;
+      visibility: visible;
+    }
+    #app-shell.editor-mode-active.output-active #output-panel {
+      flex: 1;
+      opacity: 1;
+      visibility: visible;
+    }
+    #app-shell.editor-mode-active #app {
+      flex: 0 0 350px;
+      min-width: 0;
+    }
+    .panel-resizer {
+      width: 4px;
+      background: var(--border);
+      cursor: col-resize;
+      display: none;
+      z-index: 10;
+      transition: background 0.2s;
+    }
+    .panel-resizer:hover, .panel-resizer.is-resizing {
+      background: var(--accent);
+    }
+    #app-shell.editor-mode-active.output-active #panel-resizer {
+      display: block;
+    }
+    #app-shell.editor-mode-active .msg-row {
+      padding: 0 12px;
+      margin-bottom: 12px;
+      gap: 2px;
+    }
+    #app-shell.editor-mode-active .bubble {
+      font-size: 0.85rem;
+      padding: 10px 14px;
+      line-height: 1.4;
+    }
+    #app-shell.editor-mode-active .msg-label {
+      font-size: 0.6rem;
+    }
+    #app-shell.editor-mode-active .code-container {
+      margin: 6px 0;
+      border-radius: 6px;
+      max-width: 95%;
+    }
+    #app-shell.editor-mode-active .code-header {
+      padding: 5px 10px;
+      font-size: 0.6rem;
+    }
+    #app-shell.editor-mode-active .code-container pre {
+      padding: 6px 10px;
+    }
+    #app-shell.editor-mode-active .code-container code {
+      font-size: 0.7rem;
+    }
+    #app-shell.editor-mode-active .copy-btn {
+      padding: 3px 8px;
+      font-size: 0.65rem;
+    }
+    #app-shell.editor-mode-active #text-input {
+      font-size: 0.85rem;
+      padding: 6px 0;
+    }
+    #app-shell.editor-mode-active #inspiration-chip,
+    #app-shell.editor-mode-active .model-selector-wrap,
+    #app-shell.editor-mode-active .suggestions:not(.coding-suggestions) {
+      display: none !important;
+    }
+    /* Override for inspiration chip to allow mode switching in all modes */
+    #app-shell #inspiration-chip {
+      display: flex !important;
+    }
+    .mode-selector-wrap { position: relative; }
+    #mode-dropdown {
+      position: absolute;
+      bottom: calc(100% + 10px);
+      left: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: 160px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      z-index: 1000;
+      display: none;
+      padding: 6px;
+    }
+    #mode-dropdown.open { display: block; }
+    .mode-option {
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+      color: var(--text-muted);
+    }
+    .mode-option:hover { background: var(--hover-bg); color: var(--text); }
+    .mode-option.active { color: var(--accent); background: rgba(6, 182, 212, 0.08); font-weight: 500; }
+    .coding-suggestions {
+      display: none !important;
+    }
+    #app-shell.editor-mode-active .coding-suggestions {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .msg-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .msg-row:hover .msg-actions {
+      opacity: 1;
+    }
+
+    /* Multi-file Tab Bar */
+    .editor-tabs {
+      display: flex;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      height: 38px;
+      overflow-x: auto;
+      align-items: flex-end;
+      padding: 0 10px;
+      gap: 4px;
+    }
+    .editor-tabs::-webkit-scrollbar { height: 0; }
+    
+    .editor-tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 12px;
+      height: 32px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 6px 6px 0 0;
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .editor-tab:hover {
+      background: var(--hover-bg);
+      color: var(--text-primary);
+    }
+    .editor-tab.active {
+      background: var(--surface);
+      color: var(--sb-accent);
+      border-color: var(--border);
+      height: 34px;
+      font-weight: 500;
+    }
+    .tab-close {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.3;
+      transition: all 0.2s;
+    }
+    .editor-tab:hover .tab-close { opacity: 1; }
+    .tab-close:hover { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+
+    .add-file-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.2s;
+      flex-shrink: 0;
+      margin-bottom: 3px;
+    }
+    .add-file-btn:hover { background: var(--hover-bg); color: var(--sb-accent); }
+    .msg-action-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, color 0.2s;
+    }
+    .msg-action-btn:hover {
+      background: var(--surface2);
+      color: var(--text-primary);
+    }
+    .msg-action-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+    @media (max-width: 1024px) {
+       #app-shell.editor-mode-active {
+          flex-direction: column;
+       }
+       #app-shell.editor-mode-active .editor-panel-view {
+          border-right: none;
+          border-bottom: 1px solid var(--border);
+       }
+    }
+    .editor-header {
+      height: 48px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      color: var(--text-primary);
+      flex-shrink: 0;
+    }
+    .run-btn {
+      padding: 6px 14px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      transition: opacity 0.2s;
+    }
+    .run-btn:hover { opacity: 0.9; }
+    #monaco-container {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+    }
+    #sandbox-iframe {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #ffffff;
+    }
   </style>
 </head>
 
@@ -2939,6 +3428,16 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <span class="sb-ctrl-label sb-text-fade">Search</span>
         </button>
+        <button class="sb-ctrl-btn" id="sb-code-editor-icon" title="Code Editor">
+          <div style="position: relative; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="width: 100%; height: 100%; position: absolute; z-index: 2; overflow: visible;">
+              <polyline points="16 18 22 12 16 6" class="code-arrow-right"></polyline>
+              <polyline points="8 6 2 12 8 18" class="code-arrow-left"></polyline>
+            </svg>
+            <span class="code-easter-text"></span>
+          </div>
+          <span class="sb-ctrl-label sb-text-fade">Code Editor</span>
+        </button>
         <button class="sb-ctrl-btn" id="sb-settings-icon" title="Settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
           <span class="sb-ctrl-label sb-text-fade">Settings</span>
@@ -2972,10 +3471,12 @@
     <!-- ═══ SEARCH OVERLAY ═══ -->
     <div class="sb-search-overlay" id="sb-search-overlay">
       <div class="sb-search-input-wrap">
-        <svg class="sb-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="sb-search-input" placeholder="Search chats..." autocomplete="off" />
-        <button class="sb-search-clear" id="sb-search-clear">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <button id="sb-search-back-btn" class="sb-search-back-btn" title="Back" style="position: absolute; left: 6px; top: 50%; transform: translateY(-50%); z-index: 2; width: 32px; height: 32px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <input type="text" id="sb-search-input" placeholder="Search chats..." autocomplete="off" style="padding-left: 44px; padding-right: 36px;" />
+        <button class="sb-search-clear" id="sb-search-clear" style="right: 8px; z-index: 2;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
       <div class="sb-search-results" id="sb-search-results"></div>
@@ -3096,6 +3597,41 @@
     </div>
   </div>
 
+  <div id="editor-panel" class="editor-panel-view">
+    <div class="editor-header">
+      <span>Code Editor</span>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button id="clear-code-btn" class="run-btn" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.2);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:6px;"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+          Clear
+        </button>
+        <button id="run-code-btn" class="run-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:6px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          Run
+        </button>
+      </div>
+    </div>
+    <div class="editor-tabs" id="editor-tabs">
+      <!-- Tabs will be injected here -->
+      <div class="add-file-btn" id="add-file-btn" title="New File">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      </div>
+    </div>
+    <div id="monaco-container"></div>
+  </div>
+
+  <div id="panel-resizer" class="panel-resizer"></div>
+
+  <div id="output-panel" class="editor-panel-view">
+    <div class="editor-header">
+      <span>Output</span>
+      <button id="close-output-btn" title="Close Output" style="background: transparent; color: var(--text-primary); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <iframe id="sandbox-iframe" sandbox="allow-scripts allow-modals"></iframe>
+  </div>
+
   <div id="app">
 
     <header>
@@ -3163,6 +3699,17 @@
             <span>Help me debug my code</span>
           </div>
         </div>
+
+        <div class="suggestions coding-suggestions">
+          <div class="suggestion-card" onclick="useSuggestion('Write a beautiful birthday website code')">
+            <span class="suggestion-action">Web Project</span>
+            <span>Write birthday website</span>
+          </div>
+          <div class="suggestion-card" onclick="useSuggestion('Write a professional login page code')">
+            <span class="suggestion-action">Auth UI</span>
+            <span>Write login page</span>
+          </div>
+        </div>
       </div>
 
       <div class="msg-row you" id="interim-row">
@@ -3190,14 +3737,15 @@
             </button>
             <input type="file" id="file-input" multiple accept=".pdf,.docx,.txt" style="display: none;" />
 
-            <div class="input-chip" id="inspiration-chip">
-              <div class="chip-icon-wrap">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-                </svg>
+            <div class="mode-selector-wrap">
+              <div class="input-chip" id="inspiration-chip">
+                <span id="current-mode-name">Normal Chat</span>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><polyline points="6 9 12 15 18 9"></polyline></svg>
               </div>
-              <span>Inspiration</span>
-              <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              <div id="mode-dropdown" class="model-dropdown">
+                <div class="mode-option active" data-mode="normal">Normal Chat</div>
+                <div class="mode-option" data-mode="private">Private Mode</div>
+              </div>
             </div>
 
             <div class="model-selector-wrap">
@@ -3463,6 +4011,9 @@
     const sendBtn = document.getElementById('send-btn');
     const clearBtn = document.getElementById('clear-btn');
     const welcomeHero = document.getElementById('welcome-hero');
+    const heroTitle = document.getElementById('hero-title');
+    const heroSubtitle = document.getElementById('hero-subtitle');
+    const heroIcon = document.getElementById('private-hero-icon');
 
     const attachBtn = document.getElementById('attach-btn');
     const fileInput = document.getElementById('file-input');
@@ -3703,12 +4254,19 @@
     function renderAttachments() {
       attachmentPreview.innerHTML = '';
       selectedFiles.forEach((file, index) => {
+        const ext = file.name.split('.').pop().toUpperCase();
         const chip = document.createElement('div');
         chip.className = 'file-chip';
         chip.innerHTML = `
-          <span>${file.name}</span>
+          <div class="file-chip-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+          </div>
+          <div class="file-chip-info">
+            <span class="file-chip-name">${file.name}</span>
+            <span class="file-chip-type">${ext}</span>
+          </div>
           <div class="remove-file" onclick="removeFile(${index})">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
@@ -3773,6 +4331,29 @@
 
       row.appendChild(label);
       row.appendChild(bubble);
+
+      if (role === 'ai' || role === 'thing') {
+        const actionsContainer = document.createElement('div');
+        actionsContainer.className = 'msg-actions';
+        actionsContainer.innerHTML = `
+          <button class="msg-action-btn copy-msg-btn" title="Copy Message">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+          </button>
+        `;
+        actionsContainer.querySelector('.copy-msg-btn').addEventListener('click', (e) => {
+          const btn = e.currentTarget;
+          navigator.clipboard.writeText(bubble.innerText);
+          btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+          setTimeout(() => {
+            btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+          }, 2000);
+        });
+        row.appendChild(actionsContainer);
+      }
+
       messagesEl.insertBefore(row, interimRow);
 
       // If it's an AI message AND contains HTML (code blocks or images), show it instantly 
@@ -3964,10 +4545,65 @@
           await new Promise(r => setTimeout(r, 100));
         }
 
-        // If the message was sent via mic, speak the final response
-        if (usedMic && aiBubble) {
+        if (aiBubble) {
           const rawText = aiBubble.getAttribute('data-raw') || aiBubble.innerText || '';
-          speakText(rawText);
+          
+          if (document.getElementById('app-shell').classList.contains('editor-mode-active')) {
+            const blockRegex = /```(html|css|javascript|js|python|cpp|c|java|rust|go|plaintext)?\n([\s\S]*?)```/ig;
+            let match;
+            let updatedAny = false;
+            
+            while ((match = blockRegex.exec(rawText)) !== null) {
+              const lang = (match[1] || '').toLowerCase();
+              const code = match[2].trim();
+              
+              let targetExt = null;
+              let defaultName = null;
+              
+              if (lang === 'html') { targetExt = '.html'; defaultName = 'index.html'; }
+              else if (lang === 'css') { targetExt = '.css'; defaultName = 'style.css'; }
+              else if (lang === 'javascript' || lang === 'js') { targetExt = '.js'; defaultName = 'script.js'; }
+              else if (lang === 'python') { targetExt = '.py'; defaultName = 'main.py'; }
+              else if (lang === 'cpp') { targetExt = '.cpp'; defaultName = 'main.cpp'; }
+              else if (lang === 'c') { targetExt = '.c'; defaultName = 'main.c'; }
+              
+              if (targetExt) {
+                // Look for existing file with this extension
+                let file = window.editorFiles.find(f => f.name.endsWith(targetExt));
+                
+                if (!file) {
+                  // AUTO-CREATE FILE if not found
+                  const id = 'f' + Date.now();
+                  const monacoLang = (lang === 'js' ? 'javascript' : lang);
+                  file = { id, name: defaultName, content: '', language: monacoLang, model: monaco.editor.createModel('', monacoLang) };
+                  window.editorFiles.push(file);
+                  if (typeof renderTabs === 'function') renderTabs();
+                }
+                
+                if (file && file.model) {
+                  file.model.setValue(code);
+                  updatedAny = true;
+                  // Always switch to the file we just updated
+                  if (typeof switchFile === 'function') switchFile(file.id);
+                }
+              } else if (window.editorFiles.length === 1 || rawText.includes('update_editor')) {
+                if (window.monacoEditor) {
+                  window.monacoEditor.setValue(code);
+                  updatedAny = true;
+                }
+              }
+            }
+            
+            if (updatedAny) {
+              setTimeout(() => {
+                if (window.monacoEditor) window.monacoEditor.getAction('editor.action.formatDocument').run();
+              }, 100);
+            }
+          }
+
+          if (usedMic) {
+            speakText(rawText);
+          }
         }
 
       } catch (err) {
@@ -3996,13 +4632,44 @@
         .replace(/>/g, '&gt;')
         .replace(/\n/g, '<br>');
 
+      const isEditorMode = document.getElementById('app-shell').classList.contains('editor-mode-active');
+      if (isEditorMode) {
+         const hasUpdate = formatted.includes('update_editor');
+         if (hasUpdate) {
+            formatted = formatted.replace(/```(?:[a-z]*)(?:\s|<br>)*update_editor(?:<br>|\s)*([\s\S]*?)(?:```|$)/ig, '<div style="color: var(--accent); font-weight: 500; font-size: 0.85rem; padding: 8px 0; margin-top: 4px;">[Code generated and injected into editor]</div>');
+         } else {
+            // Check if we should still hide it because it's a single block that will be auto-injected
+            const codeBlocks = text.match(/```(?:[a-z]*)\n([\s\S]*?)```/ig);
+            if (codeBlocks && codeBlocks.length === 1) {
+               const lastUserRow = document.querySelectorAll('.msg-row.you');
+               const lastUserMsg = lastUserRow.length ? lastUserRow[lastUserRow.length-1].querySelector('.bubble').innerText.toLowerCase() : '';
+               const isExplaining = lastUserMsg.includes('explain') || lastUserMsg.includes('how') || lastUserMsg.includes('why') || lastUserMsg.includes('what');
+               if (!isExplaining) {
+                  formatted = formatted.replace(/```(?:[a-z]*)(?:<br>|\s)*([\s\S]*?)(?:```|$)/g, '<div style="color: var(--accent); font-weight: 500; font-size: 0.85rem; padding: 8px 0; margin-top: 4px;">[Code generated and injected into editor]</div>');
+               }
+            }
+         }
+      }
+
       // Detect code blocks and format them if they are closed or partially open
       // We look for triple backticks and if found, we wrap in a container
       if (formatted.includes('```')) {
          return formatted.replace(/```(\w+)?\s*([\s\S]*?)```/g, (match, lang, code) => {
             const l = (lang || 'code').trim();
-            const mid = code.replace(/<br>/g, '\n');
-            return `<div class="code-container"><div class="code-header"><span>${l}</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre><code>${mid}</code></pre></div>`;
+            let mid = code.replace(/<br>/g, '\n').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+            
+            let highlighted = mid;
+            try {
+              if (window.hljs) {
+                if (lang && hljs.getLanguage(l)) {
+                  highlighted = hljs.highlight(mid, { language: l }).value;
+                } else {
+                  highlighted = hljs.highlightAuto(mid).value;
+                }
+              }
+            } catch (e) { console.error(e); }
+
+            return `<div class="code-container"><div class="code-header"><span>${l}</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre><code class="hljs ${l}">${highlighted}</code></pre></div>`;
          });
       }
       return formatted;
@@ -4046,7 +4713,16 @@
       }
       
       addBubble('you', displayMsg);
-      sendToBackend(text, selectedFiles);
+
+      let backendText = text;
+      const isEditorMode = document.getElementById('app-shell').classList.contains('editor-mode-active');
+      if (isEditorMode && window.monacoEditor) {
+         const editorCode = window.monacoEditor.getValue();
+         if (editorCode.trim()) {
+            backendText = `${text}\n\n[USER CURRENT EDITOR CODE]:\n\`\`\`\n${editorCode}\n\`\`\`\nIMPORTANT INSTRUCTION: If you are providing a FULL code replacement for the user's editor, you MUST start your markdown code block with the tag 'update_editor' (e.g. \`\`\`html update_editor). If you are just answering a question, explaining logic, or providing a small snippet, DO NOT use 'update_editor'. Just use normal markdown blocks. Only blocks with 'update_editor' will be sent to their editor.`;
+         }
+      }
+      sendToBackend(backendText, selectedFiles);
     }
 
     sendBtn.addEventListener('click', () => {
@@ -4082,6 +4758,25 @@
     }
 
     const settingsTriggers = ['settings-btn', 'sb-settings-icon', 'sb-settings-wrap'];
+    function switchTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        const metaTheme = document.querySelector('meta[name="theme-color"]');
+        const hljsTheme = document.getElementById('hljs-theme');
+
+        if (theme === 'light') {
+          if (metaTheme) metaTheme.setAttribute('content', '#ffffff');
+          if (hljsTheme) hljsTheme.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-light.min.css';
+        } else {
+          if (metaTheme) metaTheme.setAttribute('content', '#050505');
+          if (hljsTheme) hljsTheme.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css';
+        }
+
+        // Update Monaco theme if loaded
+        if (window.monacoEditor) {
+          monaco.editor.setTheme(theme === 'light' ? 'vs-light' : 'vs-dark');
+        }
+      }
     settingsTriggers.forEach(id => {
       const el = document.getElementById(id);
       if (el) el.addEventListener('click', openSettings);
@@ -4131,16 +4826,22 @@
         if ('vibrate' in navigator) navigator.vibrate(10);
         const currentTheme = document.documentElement.getAttribute('data-theme');
         const metaColor = document.querySelector('meta[name="theme-color"]');
-        if (currentTheme === 'light') {
-          document.documentElement.setAttribute('data-theme', 'dark');
-          themeBtn.innerText = 'Light Mode';
-          localStorage.setItem('theme', 'dark');
-          if (metaColor) metaColor.setAttribute('content', '#050505');
-        } else {
-          document.documentElement.setAttribute('data-theme', 'light');
-          themeBtn.innerText = 'Dark Mode';
-          localStorage.setItem('theme', 'light');
-          if (metaColor) metaColor.setAttribute('content', '#ffffff');
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        
+        document.documentElement.setAttribute('data-theme', newTheme);
+        themeBtn.innerText = newTheme === 'light' ? 'Dark Mode' : 'Light Mode';
+        localStorage.setItem('theme', newTheme);
+        if (metaColor) metaColor.setAttribute('content', newTheme === 'light' ? '#ffffff' : '#050505');
+
+        if (window.monaco) {
+           window.monaco.editor.setTheme(newTheme === 'dark' ? 'vs-dark' : 'vs-light');
+        }
+        
+        const iframe = document.getElementById('sandbox-iframe');
+        if (iframe && document.getElementById('app-shell').classList.contains('output-active') && window.monacoEditor) {
+            const isDark = newTheme === 'dark';
+            const baseCss = `<style>html, body { background-color: ${isDark ? '#0a0a0a' : '#ffffff'}; color: ${isDark ? '#e0e0e0' : '#171717'}; }</style>`;
+            iframe.srcdoc = baseCss + window.monacoEditor.getValue();
         }
       });
     }
@@ -4505,6 +5206,409 @@
         }
       });
 
+      // ── MULTI-FILE EDITOR STATE ──
+      window.editorFiles = [
+        { id: 'f1', name: 'index.html', content: '<!DOCTYPE html>\\n<html>\\n<head>\\n  <link rel="stylesheet" href="style.css">\\n</head>\\n<body>\\n  <h1>Multi-file Sandbox</h1>\\n  <p>Edit HTML, CSS, and JS separately.</p>\\n  <script src="script.js"><\\/script>\\n</body>\\n</html>', language: 'html', model: null },
+        { id: 'f2', name: 'style.css', content: 'body { font-family: sans-serif; padding: 20px; background: #f8fafc; }\\nh1 { color: #06b6d4; }', language: 'css', model: null },
+        { id: 'f3', name: 'script.js', content: 'console.log("Hello from script.js!");', language: 'javascript', model: null }
+      ];
+      window.activeFileId = 'f1';
+
+      function getLanguageFromFilename(name) {
+        const ext = name.split('.').pop().toLowerCase();
+        if (ext === 'js') return 'javascript';
+        if (ext === 'css') return 'css';
+        if (ext === 'html') return 'html';
+        if (ext === 'py') return 'python';
+        if (ext === 'cpp' || ext === 'cc') return 'cpp';
+        if (ext === 'c') return 'c';
+        if (ext === 'java') return 'java';
+        if (ext === 'rs') return 'rust';
+        if (ext === 'go') return 'go';
+        return 'plaintext';
+      }
+
+      function renderTabs() {
+        const tabsContainer = document.getElementById('editor-tabs');
+        if (!tabsContainer) return;
+        const addBtn = document.getElementById('add-file-btn');
+        tabsContainer.innerHTML = '';
+        window.editorFiles.forEach(file => {
+          const tab = document.createElement('div');
+          tab.className = 'editor-tab' + (file.id === window.activeFileId ? ' active' : '');
+          tab.innerHTML = `<span>${file.name}</span>${window.editorFiles.length > 1 ? '<span class="tab-close">✕</span>' : ''}`;
+          tab.onclick = (e) => {
+            if (e.target.classList.contains('tab-close')) {
+              e.stopPropagation();
+              deleteFile(file.id);
+            } else {
+              switchFile(file.id);
+            }
+          };
+          tabsContainer.appendChild(tab);
+        });
+        tabsContainer.appendChild(addBtn);
+      }
+
+      function switchFile(id) {
+        const file = window.editorFiles.find(f => f.id === id);
+        if (!file || !window.monacoEditor) return;
+        window.activeFileId = id;
+        window.monacoEditor.setModel(file.model);
+        renderTabs();
+      }
+
+      function addFile(name) {
+        const id = 'f' + Date.now();
+        const lang = getLanguageFromFilename(name);
+        const model = monaco.editor.createModel('', lang);
+        window.editorFiles.push({ id, name, content: '', language: lang, model });
+        renderTabs();
+        switchFile(id);
+      }
+
+      function deleteFile(id) {
+        const idx = window.editorFiles.findIndex(f => f.id === id);
+        if (idx === -1 || window.editorFiles.length <= 1) return;
+        const file = window.editorFiles[idx];
+        file.model.dispose();
+        window.editorFiles.splice(idx, 1);
+        if (window.activeFileId === id) {
+          window.activeFileId = window.editorFiles[Math.max(0, idx - 1)].id;
+          switchFile(window.activeFileId);
+        } else {
+          renderTabs();
+        }
+      }
+
+      const sbCodeEditorIcon = document.getElementById('sb-code-editor-icon');
+      if (sbCodeEditorIcon) {
+        sbCodeEditorIcon.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const appShell = document.getElementById('app-shell');
+          appShell.classList.toggle('editor-mode-active');
+          if (appShell.classList.contains('editor-mode-active')) {
+             if (heroTitle) heroTitle.innerText = "Let's do coding";
+             if (textInput) textInput.placeholder = "Let's do coding";
+             if (!window.monacoLoaded) {
+                window.monacoLoaded = true;
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js';
+                script.onload = () => {
+                  require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
+                  require(['vs/editor/editor.main'], function() {
+                    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'vs-dark' : 'vs-light';
+                    window.editorFiles.forEach(f => {
+                      f.model = monaco.editor.createModel(f.content, f.language);
+                    });
+                    window.monacoEditor = monaco.editor.create(document.getElementById('monaco-container'), {
+                      model: window.editorFiles.find(f => f.id === window.activeFileId).model,
+                      theme: theme,
+                      automaticLayout: true,
+                      minimap: { enabled: false },
+                      inlineSuggest: { enabled: true },
+                      wordWrap: 'on'
+                    });
+                    renderTabs();
+                    document.getElementById('add-file-btn').onclick = () => {
+                      const name = prompt("Enter filename:", "script.js");
+                      if (name) addFile(name);
+                    };
+                    
+                    const provideInlineCompletions = async (model, position, context, token) => {
+                        return new Promise(resolve => {
+                          setTimeout(async () => {
+                             if (token.isCancellationRequested) return resolve({ items: [] });
+                             const codeBefore = model.getValueInRange({ startLineNumber: 1, startColumn: 1, endLineNumber: position.lineNumber, endColumn: position.column });
+                             const codeAfter = model.getValueInRange({ startLineNumber: position.lineNumber, startColumn: position.column, endLineNumber: model.getLineCount(), endColumn: model.getLineMaxColumn(model.getLineCount()) });
+                             try {
+                               const res = await fetch('/api/autocomplete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ codeBefore, codeAfter, language: model.getLanguageId() }) });
+                               if (!res.ok) return resolve({items:[]});
+                               const data = await res.json();
+                               resolve({ items: data.completion ? [{ insertText: data.completion }] : [] });
+                             } catch (e) { resolve({ items: [] }); }
+                          }, 800);
+                        });
+                    };
+                    ['html', 'javascript', 'css', 'python', 'cpp', 'c', 'java', 'rust', 'go'].forEach(lang => {
+                      monaco.languages.registerInlineCompletionsProvider(lang, { provideInlineCompletions, freeInlineCompletions() {} });
+                    });
+                  });
+                };
+                document.body.appendChild(script);
+             }
+          } else {
+             if (heroTitle) heroTitle.innerText = "Build anything with Thing";
+             if (textInput) textInput.placeholder = "How can I help you today?";
+          }
+        });
+      }
+
+
+      const resizer = document.getElementById('panel-resizer');
+      const editorPanel = document.getElementById('editor-panel');
+      let isResizing = false;
+
+      if (resizer) {
+        resizer.addEventListener('mousedown', (e) => {
+          isResizing = true;
+          document.body.style.cursor = 'col-resize';
+          resizer.classList.add('is-resizing');
+        });
+
+        document.addEventListener('mousemove', (e) => {
+          if (!isResizing) return;
+          const sidebarWidth = document.getElementById('chat-sidebar').offsetWidth;
+          const appRect = document.getElementById('app-shell').getBoundingClientRect();
+          const chatWidth = document.getElementById('app').offsetWidth;
+          const availableWidth = appRect.width - sidebarWidth - chatWidth;
+          const maxEditorWidth = availableWidth - 200; // Leave at least 200px for output
+          
+          const newWidth = e.clientX - sidebarWidth;
+          const clampedWidth = Math.max(150, Math.min(newWidth, maxEditorWidth));
+          editorPanel.style.flex = `0 0 ${clampedWidth}px`;
+        });
+
+        document.addEventListener('mouseup', () => {
+          if (isResizing) {
+             isResizing = false;
+             document.body.style.cursor = '';
+             resizer.classList.remove('is-resizing');
+          }
+        });
+      }
+
+      const runCodeBtn = document.getElementById('run-code-btn');
+      if (runCodeBtn) {
+        runCodeBtn.addEventListener('click', async () => {
+           const appShell = document.getElementById('app-shell');
+           appShell.classList.add('output-active');
+           const editorP = document.getElementById('editor-panel');
+           if (editorP && !editorP.style.flex) { editorP.style.flex = '1'; }
+           
+           if (!window.monacoEditor) return;
+           
+           const activeFile = window.editorFiles.find(f => f.id === window.activeFileId);
+           const lang = activeFile ? activeFile.language : 'html';
+           
+           const judge0Langs = {
+             'python': 71,   // Python 3
+             'cpp': 54,      // C++ (GCC 9.2.0)
+             'c': 50,        // C (GCC 9.2.0)
+             'java': 62,     // Java (OpenJDK 13.0.1)
+             'rust': 73,     // Rust (1.40.0)
+             'go': 60,       // Go (1.13.5)
+             'javascript': 63 // Node.js (12.14.0)
+           };
+
+           const outputPanel = document.getElementById('output-panel');
+           let terminal = document.getElementById('sandbox-terminal');
+           const iframe = document.getElementById('sandbox-iframe');
+
+           const isWebFile = ['index.html', 'style.css', 'script.js'].includes(activeFile.name);
+
+           if (judge0Langs[lang] && !isWebFile) {
+             // RUN VIA JUDGE0 API
+             if (iframe) iframe.style.display = 'none';
+             if (!terminal) {
+               terminal = document.createElement('pre');
+               terminal.id = 'sandbox-terminal';
+               terminal.style = 'background:#0a0a0a; color:#4ade80; padding:20px; height:100%; margin:0; overflow:auto; font-family: "Cascadia Code", "Fira Code", monospace; font-size:13px; line-height:1.5; white-space: pre-wrap; border-top: 1px solid #333;';
+               outputPanel.appendChild(terminal);
+             }
+             terminal.style.display = 'block';
+             terminal.innerHTML = `<span style="color:#666;">> Initializing ${activeFile.name} on Judge0...</span>\n`;
+
+             try {
+               const res = await fetch('https://ce.judge0.com/submissions?base64_encoded=false&wait=true', {
+                 method: 'POST',
+                 headers: { 'Content-Type': 'application/json' },
+                 body: JSON.stringify({
+                   source_code: window.monacoEditor.getValue(),
+                   language_id: judge0Langs[lang],
+                   stdin: ""
+                 })
+               });
+               const data = await res.json();
+               
+               if (data.status) {
+                 const status = data.status.description;
+                 const stdout = data.stdout || '';
+                 const stderr = data.stderr || '';
+                 const compile_output = data.compile_output || '';
+                 
+                 let finalOutput = stdout + stderr + compile_output;
+                 if (!finalOutput && data.status.id === 3) finalOutput = '> Program finished with no output.';
+                 
+                 terminal.innerText = finalOutput;
+                 if (data.status.id !== 3) { // 3 is "Accepted" (Success)
+                    terminal.innerHTML += `\n\n<span style="color:#ef4444;">> Status: ${status}</span>`;
+                 }
+               } else {
+                 terminal.innerText = '> Error: Failed to get response from Judge0.';
+               }
+             } catch (e) {
+               terminal.innerText = '> Execution Error: ' + e.message;
+             }
+           } else {
+             // RUN VIA IFRAME (WEB)
+             if (terminal) terminal.style.display = 'none';
+             if (iframe) iframe.style.display = 'block';
+
+             let html = window.editorFiles.find(f => f.name === 'index.html')?.model.getValue() || '';
+             let css = window.editorFiles.find(f => f.name === 'style.css')?.model.getValue() || '';
+             let js = window.editorFiles.find(f => f.name === 'script.js')?.model.getValue() || '';
+             
+             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+             const baseStyle = `<style>html, body { background-color: ${isDark ? '#0a0a0a' : '#ffffff'}; color: ${isDark ? '#e0e0e0' : '#171717'}; margin:0; font-family:sans-serif; }</style>`;
+             
+             let finalDoc = html;
+             if (css) {
+               if (finalDoc.includes('</head>')) finalDoc = finalDoc.replace('</head>', `<style>${css}</style></head>`);
+               else finalDoc += `<style>${css}</style>`;
+             }
+             if (js) {
+               if (finalDoc.includes('</body>')) finalDoc = finalDoc.replace('</body>', `<script>${js}<\/script></body>`);
+               else finalDoc += `<script>${js}<\/script>`;
+             }
+
+             const oldIframe = document.getElementById('sandbox-iframe');
+             const newIframe = document.createElement('iframe');
+             newIframe.id = 'sandbox-iframe';
+             newIframe.sandbox = 'allow-scripts allow-modals';
+             newIframe.srcdoc = baseStyle + finalDoc;
+             
+             if (oldIframe && oldIframe.parentNode) {
+                oldIframe.parentNode.replaceChild(newIframe, oldIframe);
+             }
+           }
+           
+           setTimeout(() => { if (window.monacoEditor) window.monacoEditor.layout(); }, 100);
+        });
+      }
+
+      const closeOutputBtn = document.getElementById('close-output-btn');
+      if (closeOutputBtn) {
+        closeOutputBtn.addEventListener('click', () => {
+           document.getElementById('app-shell').classList.remove('output-active');
+           const editorP = document.getElementById('editor-panel');
+           if (editorP) {
+              editorP.style.flex = ''; // Reset the fixed width so it auto-expands
+           }
+           if (window.monacoEditor) {
+              setTimeout(() => { window.monacoEditor.layout(); }, 50);
+           }
+        });
+      }
+
+      const clearCodeBtn = document.getElementById('clear-code-btn');
+      if (clearCodeBtn) {
+        clearCodeBtn.addEventListener('click', () => {
+           if (window.monacoEditor) {
+              if (confirm("Are you sure you want to clear the editor?")) {
+                 window.monacoEditor.setValue('');
+              }
+           }
+        });
+      }
+
+      const sbSearchBackBtn = document.getElementById('sb-search-back-btn');
+      if (sbSearchBackBtn) {
+        sbSearchBackBtn.addEventListener('click', () => closeSearchOverlay());
+      }
+
+      function switchMode(mode) {
+        const appShell = document.getElementById('app-shell');
+        const modeOptions = document.querySelectorAll('.mode-option');
+        const currentModeName = document.getElementById('current-mode-name');
+        const privacyToggleBtn = document.getElementById('privacy-toggle-btn');
+
+        // Global Reset
+        appShell.classList.remove('editor-mode-active');
+        appShell.classList.remove('output-active');
+        appShell.classList.remove('private-mode-active');
+        document.body.classList.remove('private-mode-active');
+        isPrivateMode = false;
+        if (privacyToggleBtn) {
+          privacyToggleBtn.classList.remove('active');
+          privacyToggleBtn.style.color = '';
+        }
+        if (heroIcon) heroIcon.style.display = 'none';
+        if (heroSubtitle) heroSubtitle.style.display = 'none';
+
+        // Sync Dropdown UI
+        modeOptions.forEach(opt => {
+          if (opt.getAttribute('data-mode') === mode) {
+            opt.classList.add('active');
+            if (currentModeName) currentModeName.innerText = opt.innerText;
+          } else {
+            opt.classList.remove('active');
+          }
+        });
+
+        if (mode === 'coding') {
+          appShell.classList.add('editor-mode-active');
+          if (heroTitle) heroTitle.innerText = "Let's do coding";
+          if (textInput) textInput.placeholder = "Let's do coding";
+          if (!window.monacoLoaded) {
+             const sbCodeBtn = document.getElementById('sb-code-editor-icon');
+             if (sbCodeBtn) sbCodeBtn.click();
+          }
+        } else if (mode === 'private') {
+          isPrivateMode = true;
+          appShell.classList.add('private-mode-active');
+          document.body.classList.add('private-mode-active');
+          if (privacyToggleBtn) {
+            privacyToggleBtn.classList.add('active');
+            privacyToggleBtn.style.color = 'var(--sb-accent)';
+          }
+          if (textInput) textInput.placeholder = 'private mode';
+          if (heroTitle) heroTitle.textContent = 'Temporary Chat';
+          if (heroSubtitle) {
+            heroSubtitle.textContent = 'Chat history is not saved in this mode.';
+            heroSubtitle.style.display = 'block';
+          }
+          if (heroIcon) heroIcon.style.display = 'block';
+          
+          // Clear current messages for privacy
+          const rows = messagesEl.querySelectorAll('.msg-row:not(#interim-row)');
+          rows.forEach(r => r.remove());
+          welcomeHero.style.display = 'flex';
+        } else {
+          // Normal mode
+          if (heroTitle) heroTitle.innerText = "Build anything with Thing";
+          if (textInput) textInput.placeholder = "How can I help you today?";
+          // Restore last active chat if switching back from private
+          const activeChat = chats.find(c => c.id === activeId);
+          if (activeChat) restoreChat(activeChat);
+        }
+      }
+
+      const modeChip = document.getElementById('inspiration-chip');
+      const modeDropdown = document.getElementById('mode-dropdown');
+      const modeOptions = document.querySelectorAll('.mode-option');
+
+      if (modeChip) {
+        modeChip.addEventListener('click', (e) => {
+          e.stopPropagation();
+          modeDropdown.classList.toggle('open');
+        });
+      }
+
+      modeOptions.forEach(opt => {
+        opt.addEventListener('click', () => {
+          switchMode(opt.getAttribute('data-mode'));
+          modeDropdown.classList.remove('open');
+        });
+      });
+
+      // Global click to close dropdowns
+      document.addEventListener('click', () => {
+        if (modeDropdown) modeDropdown.classList.remove('open');
+        const modelDropdown = document.getElementById('model-dropdown');
+        if (modelDropdown) modelDropdown.classList.remove('open');
+      });
+
       sbSettingsIcon.addEventListener('click', (e) => {
         e.stopPropagation();
         if (typeof openSettings === 'function') openSettings();
@@ -4538,37 +5642,7 @@
 
       if (privacyToggleBtn) {
         privacyToggleBtn.addEventListener('click', () => {
-          isPrivateMode = !isPrivateMode;
-          const appShell = document.getElementById('app-shell');
-          const hTitle = document.getElementById('hero-title');
-          const hSub = document.getElementById('hero-subtitle');
-          const hIcon = document.getElementById('private-hero-icon');
-          
-          if (isPrivateMode) {
-            privacyToggleBtn.classList.add('active');
-            privacyToggleBtn.style.color = 'var(--sb-accent)';
-            if (appShell) appShell.classList.add('private-mode-active');
-            textInput.placeholder = 'private mode';
-            if (hTitle) hTitle.textContent = 'Temporary Chat';
-            if (hSub) {
-              hSub.textContent = 'This chat won’t appear in your chat history, and won’t be used to train our models.';
-            }
-            if (hIcon) hIcon.style.display = 'block';
-            // Clear current message list for private session
-            const rows = messagesEl.querySelectorAll('.msg-row:not(#interim-row)');
-            rows.forEach(r => r.remove());
-            welcomeHero.style.display = 'flex';
-          } else {
-            privacyToggleBtn.classList.remove('active');
-            privacyToggleBtn.style.color = '';
-            if (appShell) appShell.classList.remove('private-mode-active');
-            textInput.placeholder = 'How can I help you today?';
-            if (hTitle) hTitle.textContent = 'Build anything with Thing';
-            if (hIcon) hIcon.style.display = 'none';
-            // Restore last active chat
-            const activeChat = chats.find(c => c.id === activeId);
-            if (activeChat) restoreChat(activeChat);
-          }
+          switchMode(isPrivateMode ? 'normal' : 'private');
         });
       }
 

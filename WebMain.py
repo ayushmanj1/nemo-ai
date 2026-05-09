@@ -301,6 +301,61 @@ def interrupt():
     SESSION_DATA[uid]["interrupt_flag"].set()
     return jsonify(status="interrupted"), 200
 
+# ── POST /api/autocomplete ───────────────────────────────────────────────────
+@app.route("/api/autocomplete", methods=["POST"])
+def autocomplete():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "No data"}), 400
+        
+    code_before = data.get('codeBefore', '')
+    code_after = data.get('codeAfter', '')
+    language = data.get('language', 'html')
+    
+    prompt = f"""You are an expert AI coding assistant.
+Your task is to provide the EXACT code completion for the cursor position.
+Language: {language}
+
+<context_before_cursor>
+{code_before}
+</context_before_cursor>
+
+<context_after_cursor>
+{code_after}
+</context_after_cursor>
+
+RULES:
+1. ONLY return the raw code that should be inserted at the cursor.
+2. DO NOT wrap the output in markdown code blocks (e.g., no ```javascript).
+3. DO NOT output explanations, greetings, or conversational text.
+4. If there is nothing to complete, output nothing.
+5. Provide a seamless continuation of the code.
+
+Code continuation:"""
+
+    try:
+        from backend.Chatbot import ChatBot
+        # Run chatbot without history
+        generator = ChatBot(prompt, provided_messages=[], user_name="User", document_context="")
+        full_response = ""
+        for chunk in generator:
+            full_response = chunk 
+        
+        # Strip backticks if the AI accidentally added them
+        full_response = full_response.strip()
+        if full_response.startswith('```'):
+            lines = full_response.split('\n')
+            if len(lines) > 1:
+                lines = lines[1:]
+            full_response = '\n'.join(lines)
+        if full_response.endswith('```'):
+            full_response = full_response[:-3]
+            
+        return jsonify({"completion": full_response.strip('\n')})
+    except Exception as e:
+        print("Autocomplete Error:", e)
+        return jsonify({"error": str(e)}), 500
+
 # ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
