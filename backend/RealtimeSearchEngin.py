@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from backend.Utils import UniversalAI
 import warnings
 
-# Force UTF-8 encoding
+# Force UTF-8 encodinggit 
 if sys.stdout.encoding != 'utf-8':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 

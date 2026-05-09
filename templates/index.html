@@ -2832,6 +2832,8 @@
       /* --- Input Area --- */
       .control-panel {
         padding: 0 0 env(safe-area-inset-bottom, 16px);
+        transform: translateY(calc(-1 * var(--keyboard-offset, 0px)));
+        transition: transform 0.15s ease-out;
       }
 
       .input-wrapper {
@@ -4294,6 +4296,7 @@
     }
     // ──────────────────────────────────────
 
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     const attachBtn = document.getElementById('attach-btn');
     const fileInput = document.getElementById('file-input');
     const attachmentPreview = document.getElementById('attachment-preview');
@@ -4441,7 +4444,6 @@
       const utterance = new SpeechSynthesisUtterance(cleanText);
       
       // Default male-leaning settings
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       utterance.rate = 0.95; // Slightly slower for deeper feel
       utterance.volume = 1.0;
 
@@ -4735,6 +4737,7 @@
           const item = wordQueue.shift();
           
           if (item.type === 'chunk') {
+            if (isMobile && !aiBubble.getAttribute('data-raw')) textInput.blur();
             // Append chunk directly. AI sends its own spaces when needed.
             // Splitting by ' ' was causing issues like "a yu" instead of "ayu".
             const chunk = item.content;
@@ -4770,6 +4773,7 @@
         await new Promise(r => setTimeout(r, 200));
       }
       isSending = true;
+      if (isMobile) textInput.blur();
       showTyping();
       setStatus(files.length > 0 ? 'Thing is reading your documents...' : 'Thing is thinking...', 'ai');
       
@@ -5012,6 +5016,7 @@
       stopTtsBtn.style.display = 'none';
 
       textInput.value = '';
+      if (isMobile) textInput.blur();
       
       let displayMsg = text;
       if (selectedFiles.length > 0) {
@@ -6085,6 +6090,20 @@
       }, 400);
     })(); // end sidebar IIFE
 
+
+    // --- Mobile Keyboard Offset Handler ---
+    if (window.visualViewport) {
+      const updateViewport = () => {
+        const keyboardHeight = window.innerHeight - window.visualViewport.height;
+        document.documentElement.style.setProperty('--keyboard-offset', (keyboardHeight > 10 ? keyboardHeight : 0) + 'px');
+        if (keyboardHeight > 50) {
+          // Smooth scroll to bottom when keyboard opens
+          setTimeout(scrollBottom, 150);
+        }
+      };
+      window.visualViewport.addEventListener('resize', updateViewport);
+      window.visualViewport.addEventListener('scroll', updateViewport);
+    }
 
     // Register Service Worker for PWA
     if ('serviceWorker' in navigator) {
