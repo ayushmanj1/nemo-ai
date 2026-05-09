@@ -1107,6 +1107,27 @@
       line-height: 1.2;
       letter-spacing: -0.02em;
       transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      min-height: 1.2em;
+    }
+
+    /* Typing cursor for hero title */
+    .hero-title-cursor {
+      display: inline-block;
+      width: 3px;
+      height: 0.8em;
+      background: var(--accent, #06b6d4);
+      vertical-align: middle;
+      margin-left: 4px;
+      border-radius: 2px;
+      animation: cursorBlink 0.85s ease-in-out infinite;
+      opacity: 0.85;
+      position: relative;
+      top: -0.05em;
+    }
+
+    @keyframes cursorBlink {
+      0%, 45%  { opacity: 0.85; }
+      55%, 100% { opacity: 0; }
     }
 
     #app-shell.private-mode-active .hero-title {
@@ -2474,11 +2495,19 @@
       .settings-container {
         max-width: 440px;
       }
+
+      /* Hide code editor button on tablet */
+      #sb-code-editor-icon {
+        display: none !important;
+      }
     }
 
     /* ── Mobile (max-width: 600px) ── */
     @media (max-width: 600px) {
-      /* --- Layout --- */
+      /* --- Hide code editor button on mobile --- */
+      #sb-code-editor-icon {
+        display: none !important;
+      }
       #app {
         padding: 0 10px;
       }
@@ -3678,7 +3707,7 @@
             <path d="M12 6a4 4 0 0 0-4 4h2a2 2 0 1 1 4 0h2a4 4 0 0 0-4-4zM7 14a3 3 0 1 0 3 3h-2a1 1 0 1 1-2 0H5a3 3 0 0 0 2-3zm10 0a3 3 0 1 0-3 3h2a1 1 0 1 1 2 0h1a3 3 0 0 0-2-3z"/>
           </svg>
         </div>
-        <h1 class="hero-title" id="hero-title">Build anything with Thing</h1>
+        <h1 class="hero-title" id="hero-title"></h1>
         <p id="hero-subtitle" class="hero-subtitle" style="display: none;"></p>
 
         <div class="suggestions">
@@ -4015,6 +4044,50 @@
     const heroSubtitle = document.getElementById('hero-subtitle');
     const heroIcon = document.getElementById('private-hero-icon');
 
+    // ── Hero Title Typing Animation ──
+    let _heroTypingTimer = null;
+    let _heroTypingTimers = [];
+    function typeHeroTitle(text = 'Build anything with Thing', delay = 0) {
+      if (!heroTitle) return;
+      // Cancel all pending timers
+      _heroTypingTimers.forEach(t => clearTimeout(t));
+      _heroTypingTimers = [];
+      heroTitle.innerHTML = '';
+      heroTitle.style.opacity = '1';
+      const chars = text.split('');
+      let i = 0;
+      const cursor = document.createElement('span');
+      cursor.className = 'hero-title-cursor';
+      heroTitle.appendChild(cursor);
+
+      function typeNextChar() {
+        if (i < chars.length) {
+          // Insert text node before cursor for clean DOM
+          cursor.before(document.createTextNode(chars[i]));
+          i++;
+          // Smooth speed: 38ms base, ±12ms variation, extra pause after punctuation
+          const ch = chars[i - 1];
+          let speed = 38 + (Math.random() * 24 - 12);
+          if (ch === ' ') speed += 10;     // tiny pause at spaces
+          if ('.!?,'.includes(ch)) speed += 60; // longer pause after punctuation
+          const t = setTimeout(typeNextChar, speed);
+          _heroTypingTimers.push(t);
+        } else {
+          // Fade cursor out smoothly
+          cursor.style.transition = 'opacity 0.5s ease';
+          const t = setTimeout(() => {
+            cursor.style.opacity = '0';
+            const t2 = setTimeout(() => { if (cursor.parentNode) cursor.remove(); }, 550);
+            _heroTypingTimers.push(t2);
+          }, 700);
+          _heroTypingTimers.push(t);
+        }
+      }
+      const startTimer = setTimeout(typeNextChar, delay);
+      _heroTypingTimers.push(startTimer);
+    }
+    // ──────────────────────────────────────
+
     const attachBtn = document.getElementById('attach-btn');
     const fileInput = document.getElementById('file-input');
     const attachmentPreview = document.getElementById('attachment-preview');
@@ -4342,6 +4415,13 @@
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
             </svg>
           </button>
+          <button class="msg-action-btn download-msg-btn" title="Download Image" style="display: none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+          </button>
         `;
         actionsContainer.querySelector('.copy-msg-btn').addEventListener('click', (e) => {
           const btn = e.currentTarget;
@@ -4351,6 +4431,33 @@
             btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
           }, 2000);
         });
+
+        const downloadBtn = actionsContainer.querySelector('.download-msg-btn');
+        downloadBtn.addEventListener('click', () => {
+          const img = bubble.querySelector('img');
+          if (img) {
+            const a = document.createElement('a');
+            a.href = img.src;
+            a.download = 'thing-ai-image.jpg';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+          }
+        });
+
+        // Observer to show download button when image is added
+        const observer = new MutationObserver(() => {
+          if (bubble.querySelector('img')) {
+            downloadBtn.style.display = 'flex';
+          } else {
+            downloadBtn.style.display = 'none';
+          }
+        });
+        observer.observe(bubble, { childList: true, subtree: true });
+        
+        // Initial check
+        if (text.includes('<img')) downloadBtn.style.display = 'flex';
+
         row.appendChild(actionsContainer);
       }
 
@@ -5064,6 +5171,7 @@
         const rows = messagesEl.querySelectorAll('.msg-row:not(#interim-row)');
         rows.forEach(r => r.remove());
         welcomeHero.style.display = 'flex';
+        typeHeroTitle();
         fetch('/clear', { method: 'POST' }).catch(() => {});
         renderList('');
         closeMobileSidebar();
@@ -5338,7 +5446,7 @@
                 document.body.appendChild(script);
              }
           } else {
-             if (heroTitle) heroTitle.innerText = "Build anything with Thing";
+             if (heroTitle) typeHeroTitle();
              if (textInput) textInput.placeholder = "How can I help you today?";
           }
         });
@@ -5576,7 +5684,7 @@
           welcomeHero.style.display = 'flex';
         } else {
           // Normal mode
-          if (heroTitle) heroTitle.innerText = "Build anything with Thing";
+          if (heroTitle) typeHeroTitle();
           if (textInput) textInput.placeholder = "How can I help you today?";
           // Restore last active chat if switching back from private
           const activeChat = chats.find(c => c.id === activeId);
@@ -5673,6 +5781,12 @@
         if (activeChat && activeChat.messages && activeChat.messages.length > 0) restoreChat(activeChat);
       }
       init();
+      // Trigger typing animation on initial page load if hero is visible
+      setTimeout(() => {
+        if (welcomeHero && welcomeHero.style.display !== 'none') {
+          typeHeroTitle();
+        }
+      }, 400);
     })(); // end sidebar IIFE
 
 
