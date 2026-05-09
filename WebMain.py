@@ -143,9 +143,11 @@ def speak():
     if request.is_json:
         data = request.get_json(force=True)
         user_text = (data.get("text") or "").strip()
+        selected_model = data.get("model") or "Brainwave 2.5"
         files = []
     else:
         user_text = request.form.get("text", "").strip()
+        selected_model = request.form.get("model", "Brainwave 2.5")
         files = request.files.getlist("files")
 
     if not user_text and not files:
@@ -219,9 +221,10 @@ def speak():
                     modified_query = QueryModifier(clean_query)
                     
                     if "realtime" in task:
-                        generator = RealtimeSearchEngine(modified_query, provided_messages=history, user_name=username)
+                        generator = RealtimeSearchEngine(modified_query, provided_messages=history, user_name=username, model_name=selected_model)
                     else:
-                        generator = ChatBot(modified_query, provided_messages=history, user_name=username, document_context=document_context)
+                        is_coding = "content" in task.lower()
+                        generator = ChatBot(modified_query, provided_messages=history, user_name=username, document_context=document_context, mode="coding" if is_coding else "general", model_name=selected_model)
 
                     last_sent_len = 0
                     for full_answer in generator:
@@ -335,8 +338,8 @@ Code continuation:"""
 
     try:
         from backend.Chatbot import ChatBot
-        # Run chatbot without history
-        generator = ChatBot(prompt, provided_messages=[], user_name="User", document_context="")
+        # Run chatbot without history, using coding mode
+        generator = ChatBot(prompt, provided_messages=[], user_name="User", document_context="", mode="coding")
         full_response = ""
         for chunk in generator:
             full_response = chunk 

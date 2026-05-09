@@ -369,6 +369,70 @@ def fetch_google_news_rss(query):
     return results
 
 
+def fetch_serper_search(query):
+    """Fetch search results from Serper API."""
+    results = []
+    api_key = os.getenv("SERPER_API_KEY")
+    if not api_key:
+        return results
+    try:
+        print(f"[SerperAPI] 🔍 Fetching Serper results for: '{query}'")
+        url = "https://google.serper.dev/search"
+        payload = json.dumps({
+            "q": query,
+            "num": 5
+        })
+        headers = {
+            'X-API-KEY': api_key,
+            'Content-Type': 'application/json'
+        }
+        resp = requests.request("POST", url, headers=headers, data=payload, timeout=8)
+        if resp.status_code == 200:
+            data = resp.json()
+            for r in data.get('organic', [])[:5]:
+                results.append({
+                    'title': f"[SERPER] {r.get('title', 'No Title')}",
+                    'body': r.get('snippet', 'No Description'),
+                    'href': r.get('link', '#')
+                })
+            print(f"[SerperAPI] ✅ Got {len(results)} results")
+    except Exception as e:
+        print(f"[SerperAPI] ❌ Error: {e}")
+    return results
+
+
+def fetch_tavily_search(query):
+    """Fetch search results from Tavily API."""
+    results = []
+    api_key = os.getenv("TAVILY_API_KEY")
+    if not api_key:
+        return results
+    try:
+        print(f"[TavilyAPI] 🔍 Fetching Tavily results for: '{query}'")
+        url = "https://api.tavily.com/search"
+        payload = {
+            "api_key": api_key,
+            "query": query,
+            "search_depth": "basic",
+            "include_answer": False,
+            "max_results": 5
+        }
+        headers = {'Content-Type': 'application/json'}
+        resp = requests.post(url, json=payload, headers=headers, timeout=8)
+        if resp.status_code == 200:
+            data = resp.json()
+            for r in data.get('results', []):
+                results.append({
+                    'title': f"[TAVILY] {r.get('title', 'No Title')}",
+                    'body': r.get('content', 'No Description'),
+                    'href': r.get('url', '#')
+                })
+            print(f"[TavilyAPI] ✅ Got {len(results)} results")
+    except Exception as e:
+        print(f"[TavilyAPI] ❌ Error: {e}")
+    return results
+
+
 # =====================================================================
 # MAIN SEARCH FUNCTION
 # =====================================================================
@@ -410,60 +474,38 @@ def GoogleSearch(query, query_types=None):
         news_results = fetch_google_news_rss(news_query)
         results.extend(news_results)
 
-    # --- DUCKDUCKGO SEARCH (general web search) ---
-    try:
-        from duckduckgo_search import DDGS
-        with DDGS() as ddgs:
-            # For current affairs / temporal, prioritize news over text
-            if "current_affairs" in query_types or "temporal" in query_types:
-                enhanced_query = enhance_query_for_recency(query)
+    # --- TAVILY SEARCH (Primary for general web search) ---
+    if len(results) < 3:
+        try:
+            tavily_results = fetch_tavily_search(enhance_query_for_recency(query) if "temporal" in query_types else query)
+            if tavily_results:
+                results.extend(tavily_results)
+        except Exception as e:
+            print(f"[GoogleSearch] Tavily Error: {e}")
 
-                # Try DDGS news first
-                try:
-                    print(f"[GoogleSearch] Trying DDGS News: '{enhanced_query}'")
-                    news = list(ddgs.news(enhanced_query, max_results=5))
-                    for r in news:
-                        results.append({
-                            'title': "[NEWS] " + r.get('title', 'No Title'),
-                            'body': r.get('body', 'No Description'),
-                            'href': r.get('url', '#')
-                        })
-                except Exception as e:
-                    print(f"[GoogleSearch] DDGS News Error: {e}")
+    # --- SERPER SEARCH (Secondary) ---
+    if len(results) < 3:
+        try:
+            serper_results = fetch_serper_search(enhance_query_for_recency(query) if "temporal" in query_types else query)
+            if serper_results:
+                results.extend(serper_results)
+        except Exception as e:
+            print(f"[GoogleSearch] Serper Error: {e}")
 
-                # Then text search with year
-                if len(results) < 5:
+    # --- DUCKDUCKGO SEARCH (Tertiary fallback) ---
+    if len(results) < 3:
+        try:
+            from duckduckgo_search import DDGS
+            with DDGS() as ddgs:
+                # For current affairs / temporal, prioritize news over text
+                if "current_affairs" in query_types or "temporal" in query_types:
+                    enhanced_query = enhance_query_for_recency(query)
+
+                    # Try DDGS news first
                     try:
-                        print(f"[GoogleSearch] Trying DDGS Text: '{enhanced_query}'")
-                        text = list(ddgs.text(enhanced_query, max_results=5))
-                        for r in text:
-                            results.append({
-                                'title': r.get('title', 'No Title'),
-                                'body': r.get('body', 'No Description'),
-                                'href': r.get('href', '#')
-                            })
-                    except Exception as e:
-                        print(f"[GoogleSearch] DDGS Text Error: {e}")
-            else:
-                # General queries — text search first
-                try:
-                    print(f"[GoogleSearch] Trying DDGS Text Search...")
-                    text_results = list(ddgs.text(query, max_results=5))
-                    for r in text_results:
-                        results.append({
-                            'title': r.get('title', 'No Title'),
-                            'body': r.get('body', 'No Description'),
-                            'href': r.get('href', '#')
-                        })
-                except Exception as e:
-                    print(f"[GoogleSearch] DDGS Text Error: {e}")
-
-                # Also try news if we don't have enough
-                if len(results) < 3:
-                    try:
-                        print(f"[GoogleSearch] Trying DDGS News...")
-                        news_results = list(ddgs.news(query, max_results=3))
-                        for r in news_results:
+                        print(f"[GoogleSearch] Trying DDGS News: '{enhanced_query}'")
+                        news = list(ddgs.news(enhanced_query, max_results=5))
+                        for r in news:
                             results.append({
                                 'title': "[NEWS] " + r.get('title', 'No Title'),
                                 'body': r.get('body', 'No Description'),
@@ -471,8 +513,49 @@ def GoogleSearch(query, query_types=None):
                             })
                     except Exception as e:
                         print(f"[GoogleSearch] DDGS News Error: {e}")
-    except Exception as e:
-        print(f"[GoogleSearch] DDGS Error: {e}")
+
+                    # Then text search with year
+                    if len(results) < 5:
+                        try:
+                            print(f"[GoogleSearch] Trying DDGS Text: '{enhanced_query}'")
+                            text = list(ddgs.text(enhanced_query, max_results=5))
+                            for r in text:
+                                results.append({
+                                    'title': r.get('title', 'No Title'),
+                                    'body': r.get('body', 'No Description'),
+                                    'href': r.get('href', '#')
+                                })
+                        except Exception as e:
+                            print(f"[GoogleSearch] DDGS Text Error: {e}")
+                else:
+                    # General queries — text search first
+                    try:
+                        print(f"[GoogleSearch] Trying DDGS Text Search...")
+                        text_results = list(ddgs.text(query, max_results=5))
+                        for r in text_results:
+                            results.append({
+                                'title': r.get('title', 'No Title'),
+                                'body': r.get('body', 'No Description'),
+                                'href': r.get('href', '#')
+                            })
+                    except Exception as e:
+                        print(f"[GoogleSearch] DDGS Text Error: {e}")
+
+                    # Also try news if we don't have enough
+                    if len(results) < 3:
+                        try:
+                            print(f"[GoogleSearch] Trying DDGS News...")
+                            news_results = list(ddgs.news(query, max_results=3))
+                            for r in news_results:
+                                results.append({
+                                    'title': "[NEWS] " + r.get('title', 'No Title'),
+                                    'body': r.get('body', 'No Description'),
+                                    'href': r.get('url', '#')
+                                })
+                        except Exception as e:
+                            print(f"[GoogleSearch] DDGS News Error: {e}")
+        except Exception as e:
+            print(f"[GoogleSearch] DDGS Error: {e}")
 
     # --- DDG Instant Answer API (stable, good for definitions) ---
     if len(results) < 3 and "general" in query_types:
@@ -534,7 +617,7 @@ def Information():
     return f"Time: {now.strftime('%H:%M:%S')}\nDate: {now.strftime('%d/%m/%Y')}\nDay: {now.strftime('%A')}\nYear: {now.strftime('%Y')}\n"
 
 
-def RealtimeSearchEngine(prompt, provided_messages=None, user_name=None):
+def RealtimeSearchEngine(prompt, provided_messages=None, user_name=None, model_name="Brainwave 2.5"):
     if provided_messages is None:
         provided_messages = []
     if user_name is None:
@@ -578,7 +661,7 @@ Question: {prompt}
     # We pass a shorter history to prevent old answers from biasing the model
     Answer = ""
     chunk_count = 0
-    for chunk in UniversalAI(rag_user_message, system_prompt=system_content, history=provided_messages[-2:], temperature=0.0):
+    for chunk in UniversalAI(rag_user_message, system_prompt=system_content, history=provided_messages[-2:], temperature=0.0, model_name=model_name):
         Answer += chunk
         chunk_count += 1
         yield Answer

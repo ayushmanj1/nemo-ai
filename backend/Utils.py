@@ -16,10 +16,10 @@ Assistantname = os.getenv("Assistantname", "Thing")
 groq_client = Groq(api_key=GroqAPIKey) if GroqAPIKey else None
 co_client = cohere.Client(api_key=CohereAPIKey) if CohereAPIKey else None
 
-def UniversalAI(prompt, system_prompt=None, history=None, stream=True, temperature=0.7, max_tokens=2048):
+def UniversalAI(prompt, system_prompt=None, history=None, stream=True, temperature=0.7, max_tokens=2048, mode="general", model_name="Brainwave 2.5"):
     """
     A universal wrapper for AI calls with fallback logic.
-    Tries Groq (70B), then Groq (8B) if rate limited, then Cohere.
+    Tries the selected model, then fallbacks.
     """
     if history is None:
         history = []
@@ -35,11 +35,27 @@ def UniversalAI(prompt, system_prompt=None, history=None, stream=True, temperatu
     # Add current query
     messages.append({"role": "user", "content": prompt})
 
-    # Strategy 1: Groq 70B
+    # Mapping frontend names to Groq/Cohere models
+    model_map = {
+        "DeepSeek R1": "deepseek-r1-distill-llama-70b",
+        "Llama Model": "llama-3.3-70b-versatile",
+        "Brainwave 2.5": "llama-3.3-70b-versatile",
+        "Cohere Model": "command-r-plus-08-2024",
+        "Gemini Model": "llama-3.3-70b-versatile" # Fallback since Gemini isn't here
+    }
+
+    # Determine primary model
+    if mode == "coding":
+        primary_model = "deepseek-r1-distill-llama-70b"
+    else:
+        primary_model = model_map.get(model_name, "llama-3.3-70b-versatile")
+
+    # Strategy 1: Primary Groq Model
     if groq_client:
         try:
+            print(f"[Utils] Using Primary Model: {primary_model} (Mode: {mode})")
             completion = groq_client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
+                model=primary_model,
                 messages=messages,
                 max_tokens=max_tokens,
                 temperature=temperature,

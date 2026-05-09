@@ -57,7 +57,7 @@ def RealtimeInformation():
     now = datetime.datetime.now()
     return f"Day: {now.strftime('%A')}\nDate: {now.strftime('%d/%m/%Y')}\nTime: {now.strftime('%H:%M:%S')}\n"
 
-def ChatBot(Query, provided_messages=None, user_name=None, document_context=None):
+def ChatBot(Query, provided_messages=None, user_name=None, document_context=None, mode="general", model_name="Brainwave 2.5"):
     if provided_messages is None:
         provided_messages = []
     if user_name is None:
@@ -67,7 +67,7 @@ def ChatBot(Query, provided_messages=None, user_name=None, document_context=None
     combined_system_prompt = system_content + "\n" + RealtimeInformation()
     
     Answer = ""
-    for chunk in UniversalAI(Query, system_prompt=combined_system_prompt, history=provided_messages):
+    for chunk in UniversalAI(Query, system_prompt=combined_system_prompt, history=provided_messages, mode=mode, model_name=model_name):
         Answer += chunk
         yield Answer
 

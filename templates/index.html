@@ -653,10 +653,10 @@
 
     /* ── Main content area (right of sidebar) ── */
     #app {
-      flex: 1; min-width: 0; position: relative; z-index: 1;
+      flex: 1 1 auto; min-width: 0; position: relative; z-index: 1;
       display: flex; flex-direction: column; height: 100dvh;
-      max-width: none; width: 100%; margin: 0; padding: 0 24px;
-      transition: flex 0.4s cubic-bezier(0.25, 1, 0.5, 1), margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      width: 100%; max-width: none; margin: 0; padding: 0 24px;
+      transition: flex 0.4s cubic-bezier(0.25, 1, 0.5, 1), width 0.4s cubic-bezier(0.25, 1, 0.5, 1), margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     /* ── Mobile overlay ── */
@@ -1963,7 +1963,18 @@
       }
 
       .control-panel {
-        padding-bottom: max(32px, env(safe-area-inset-bottom));
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--bg);
+        z-index: 2000;
+        padding-bottom: env(safe-area-inset-bottom);
+        transition: bottom 0.1s ease-out;
+      }
+
+      #messages {
+        padding-bottom: 160px;
       }
 
       .attachment-preview {
@@ -3290,44 +3301,34 @@
     .editor-panel-view {
       display: flex;
       flex-direction: column;
-      flex: 0;
-      width: 0;
+      flex: 0 0 0px;
+      width: 0px;
       opacity: 0;
       visibility: hidden;
       height: 100%;
       border-right: 1px solid var(--border);
       min-width: 0;
-      background: var(--surface);
+      background: var(--bg);
       overflow: hidden;
-      transition: flex 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease;
+      transition: flex 0.4s cubic-bezier(0.25, 1, 0.5, 1), width 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease;
     }
     #app-shell.editor-mode-active #editor-panel {
-      flex: 1;
+      flex: 1 1 auto;
+      width: auto;
       opacity: 1;
       visibility: visible;
     }
     #app-shell.editor-mode-active.output-active #output-panel {
-      flex: 1;
+      flex: 0 0 350px;
+      width: 350px;
       opacity: 1;
       visibility: visible;
+      border-left: 1px solid var(--border);
     }
     #app-shell.editor-mode-active #app {
       flex: 0 0 350px;
+      width: 350px;
       min-width: 0;
-    }
-    .panel-resizer {
-      width: 4px;
-      background: var(--border);
-      cursor: col-resize;
-      display: none;
-      z-index: 10;
-      transition: background 0.2s;
-    }
-    .panel-resizer:hover, .panel-resizer.is-resizing {
-      background: var(--accent);
-    }
-    #app-shell.editor-mode-active.output-active #panel-resizer {
-      display: block;
     }
     #app-shell.editor-mode-active .msg-row {
       padding: 0 12px;
@@ -3426,13 +3427,13 @@
     /* Multi-file Tab Bar */
     .editor-tabs {
       display: flex;
-      background: var(--surface);
+      background: var(--surface2);
       border-bottom: 1px solid var(--border);
-      height: 38px;
+      height: 35px;
       overflow-x: auto;
       align-items: flex-end;
-      padding: 0 10px;
-      gap: 4px;
+      padding: 0;
+      gap: 1px;
     }
     .editor-tabs::-webkit-scrollbar { height: 0; }
     
@@ -3441,25 +3442,32 @@
       align-items: center;
       gap: 8px;
       padding: 0 12px;
-      height: 32px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-bottom: none;
-      border-radius: 6px 6px 0 0;
-      font-size: 12px;
-      color: var(--text-muted);
+      height: 35px;
+      background: var(--surface);
+      border: none;
+      font-size: 13px;
+      color: var(--muted);
       cursor: pointer;
+      position: relative;
+      transition: background 0.2s, color 0.2s;
     }
     .editor-tab:hover {
-      background: var(--hover-bg);
-      color: var(--text-primary);
+      background: #323233;
+      color: #cccccc;
     }
     .editor-tab.active {
-      background: var(--surface);
-      color: var(--sb-accent);
-      border-color: var(--border);
-      height: 34px;
-      font-weight: 500;
+      background: var(--bg);
+      color: var(--text);
+      font-weight: 400;
+    }
+    .editor-tab.active::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: var(--sb-accent);
     }
     .tab-close {
       width: 16px;
@@ -3468,26 +3476,25 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      opacity: 0.3;
+      opacity: 0;
       transition: all 0.2s;
+      font-size: 10px;
     }
-    .editor-tab:hover .tab-close { opacity: 1; }
-    .tab-close:hover { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+    .editor-tab:hover .tab-close { opacity: 0.6; }
+    .tab-close:hover { background: rgba(255, 255, 255, 0.1); color: #ffffff; opacity: 1; }
 
     .add-file-btn {
-      width: 32px;
-      height: 32px;
+      width: 35px;
+      height: 35px;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--text-muted);
+      color: #969696;
       cursor: pointer;
-      border-radius: 6px;
       transition: all 0.2s;
       flex-shrink: 0;
-      margin-bottom: 3px;
     }
-    .add-file-btn:hover { background: var(--hover-bg); color: var(--sb-accent); }
+    .add-file-btn:hover { background: #323233; color: #ffffff; }
     .msg-action-btn {
       background: transparent;
       border: none;
@@ -3518,17 +3525,45 @@
        }
     }
     .editor-header {
-      height: 48px;
+      height: 35px;
       padding: 0 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid var(--border);
-      background: var(--surface2);
-      font-family: 'Syne', sans-serif;
-      font-size: 14px;
-      color: var(--text-primary);
+      background: var(--surface);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      color: var(--muted);
       flex-shrink: 0;
+    }
+    .breadcrumb-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .editor-actions-group {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+    .editor-action-icon {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .editor-action-icon:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .editor-action-icon svg {
+      width: 16px;
+      height: 16px;
     }
     .run-btn {
       padding: 6px 14px;
@@ -3554,7 +3589,7 @@
       width: 100%;
       height: 100%;
       border: none;
-      background: #ffffff;
+      background: var(--bg);
     }
   </style>
 </head>
@@ -3834,16 +3869,20 @@
 
   <div id="editor-panel" class="editor-panel-view">
     <div class="editor-header">
-      <span>Code Editor</span>
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <button id="clear-code-btn" class="run-btn" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.2);">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:6px;"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-          Clear
-        </button>
-        <button id="run-code-btn" class="run-btn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:6px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-          Run
-        </button>
+      <div class="breadcrumb-item" id="editor-breadcrumb">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;color:#4ade80;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span id="breadcrumb-filename">WebMain.py</span>
+      </div>
+      <div class="editor-actions-group">
+        <div class="editor-action-icon" id="run-code-btn" title="Run Code (Ctrl+Enter)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#4ade80;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        </div>
+        <div class="editor-action-icon" id="toggle-output-btn" title="Toggle Output Panel">
+           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M2 15h20"/></svg>
+        </div>
+        <div class="editor-action-icon" id="clear-code-btn" title="Clear Editor">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+        </div>
       </div>
     </div>
     <div class="editor-tabs" id="editor-tabs">
@@ -3854,9 +3893,6 @@
     </div>
     <div id="monaco-container"></div>
   </div>
-
-  <div id="panel-resizer" class="panel-resizer"></div>
-
   <div id="output-panel" class="editor-panel-view">
     <div class="editor-header">
       <span>Output</span>
@@ -3990,6 +4026,7 @@
               </div>
               <div class="model-dropdown" id="model-dropdown">
                 <div class="model-option active" data-model="Brainwave 2.5">Brainwave 2.5</div>
+                <div class="model-option" data-model="DeepSeek R1">DeepSeek R1</div>
                 <div class="model-option" data-model="Llama Model">Llama Model</div>
                 <div class="model-option" data-model="Cohere Model">Cohere Model</div>
                 <div class="model-option" data-model="Gemini Model">Gemini Model</div>
@@ -4781,16 +4818,19 @@
         
         let body;
         let headers = {};
+        const modelName = document.getElementById('current-model-name')?.innerText || 'Brainwave 2.5';
 
         if (files.length > 0) {
           body = new FormData();
           body.append('text', text);
+          body.append('model', modelName);
           files.forEach(f => body.append('files', f));
           body.append('isGuest', localStorage.getItem('isGuest') === 'true');
         } else {
           headers['Content-Type'] = 'application/json';
           body = JSON.stringify({
             text: text,
+            model: modelName,
             isGuest: localStorage.getItem('isGuest') === 'true'
           });
         }
@@ -5612,9 +5652,44 @@
 
       // ── MULTI-FILE EDITOR STATE ──
       window.editorFiles = [
-        { id: 'f1', name: 'index.html', content: '<!DOCTYPE html>\\n<html>\\n<head>\\n  <link rel="stylesheet" href="style.css">\\n</head>\\n<body>\\n  <h1>Multi-file Sandbox</h1>\\n  <p>Edit HTML, CSS, and JS separately.</p>\\n  <script src="script.js"><\\/script>\\n</body>\\n</html>', language: 'html', model: null },
-        { id: 'f2', name: 'style.css', content: 'body { font-family: sans-serif; padding: 20px; background: #f8fafc; }\\nh1 { color: #06b6d4; }', language: 'css', model: null },
-        { id: 'f3', name: 'script.js', content: 'console.log("Hello from script.js!");', language: 'javascript', model: null }
+        { 
+          id: 'f1', 
+          name: 'index.html', 
+          content: `<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Multi-file Sandbox</h1>
+  <p>Edit HTML, CSS, and JS separately.</p>
+  <script src="script.js"><\/script>
+</body>
+</html>`, 
+          language: 'html', 
+          model: null 
+        },
+        { 
+          id: 'f2', 
+          name: 'style.css', 
+          content: `body { 
+  font-family: sans-serif; 
+  padding: 20px; 
+  background: #f8fafc; 
+}
+h1 { 
+  color: #06b6d4; 
+}`, 
+          language: 'css', 
+          model: null 
+        },
+        { 
+          id: 'f3', 
+          name: 'script.js', 
+          content: `console.log("Hello from script.js!");`, 
+          language: 'javascript', 
+          model: null 
+        }
       ];
       window.activeFileId = 'f1';
 
@@ -5640,7 +5715,21 @@
         window.editorFiles.forEach(file => {
           const tab = document.createElement('div');
           tab.className = 'editor-tab' + (file.id === window.activeFileId ? ' active' : '');
-          tab.innerHTML = `<span>${file.name}</span>${window.editorFiles.length > 1 ? '<span class="tab-close">✕</span>' : ''}`;
+          
+          let iconColor = '#969696';
+          let iconPath = '<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/>';
+          
+          if (file.name.endsWith('.py')) { iconColor = '#4ade80'; }
+          else if (file.name.endsWith('.js')) { iconColor = '#facc15'; }
+          else if (file.name.endsWith('.html')) { iconColor = '#fb923c'; }
+          else if (file.name.endsWith('.css')) { iconColor = '#3b82f6'; }
+          
+          tab.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;">${iconPath}</svg>
+            <span>${file.name}</span>
+            ${window.editorFiles.length > 1 ? '<span class="tab-close">✕</span>' : ''}
+          `;
+          
           tab.onclick = (e) => {
             if (e.target.classList.contains('tab-close')) {
               e.stopPropagation();
@@ -5659,6 +5748,8 @@
         if (!file || !window.monacoEditor) return;
         window.activeFileId = id;
         window.monacoEditor.setModel(file.model);
+        const breadcrumb = document.getElementById('breadcrumb-filename');
+        if (breadcrumb) breadcrumb.innerText = file.name;
         renderTabs();
       }
 
@@ -5709,10 +5800,24 @@
                       model: window.editorFiles.find(f => f.id === window.activeFileId).model,
                       theme: theme,
                       automaticLayout: true,
-                      minimap: { enabled: false },
+                      minimap: { enabled: true },
                       inlineSuggest: { enabled: true },
-                      wordWrap: 'on'
+                      wordWrap: 'on',
+                      fontSize: 14,
+                      fontFamily: "'Cascadia Code', 'Fira Code', Consolas, 'Courier New', monospace",
+                      cursorBlinking: 'smooth',
+                      smoothScrolling: true,
+                      padding: { top: 10 }
                     });
+
+                    const toggleOutputBtn = document.getElementById('toggle-output-btn');
+                    if (toggleOutputBtn) {
+                      toggleOutputBtn.onclick = () => {
+                        const shell = document.getElementById('app-shell');
+                        shell.classList.toggle('output-active');
+                        setTimeout(() => window.monacoEditor.layout(), 100);
+                      };
+                    }
                     renderTabs();
                     document.getElementById('add-file-btn').onclick = () => {
                       const name = prompt("Enter filename:", "script.js");
@@ -5748,39 +5853,6 @@
         });
       }
 
-
-      const resizer = document.getElementById('panel-resizer');
-      const editorPanel = document.getElementById('editor-panel');
-      let isResizing = false;
-
-      if (resizer) {
-        resizer.addEventListener('mousedown', (e) => {
-          isResizing = true;
-          document.body.style.cursor = 'col-resize';
-          resizer.classList.add('is-resizing');
-        });
-
-        document.addEventListener('mousemove', (e) => {
-          if (!isResizing) return;
-          const sidebarWidth = document.getElementById('chat-sidebar').offsetWidth;
-          const appRect = document.getElementById('app-shell').getBoundingClientRect();
-          const chatWidth = document.getElementById('app').offsetWidth;
-          const availableWidth = appRect.width - sidebarWidth - chatWidth;
-          const maxEditorWidth = availableWidth - 200; // Leave at least 200px for output
-          
-          const newWidth = e.clientX - sidebarWidth;
-          const clampedWidth = Math.max(150, Math.min(newWidth, maxEditorWidth));
-          editorPanel.style.flex = `0 0 ${clampedWidth}px`;
-        });
-
-        document.addEventListener('mouseup', () => {
-          if (isResizing) {
-             isResizing = false;
-             document.body.style.cursor = '';
-             resizer.classList.remove('is-resizing');
-          }
-        });
-      }
 
       const runCodeBtn = document.getElementById('run-code-btn');
       if (runCodeBtn) {
@@ -6086,13 +6158,26 @@
     })(); // end sidebar IIFE
 
 
-    // Register Service Worker for PWA
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js', { scope: '/' })
-          .then(reg => console.log('Service Worker registered', reg))
-          .catch(err => console.error('Service Worker registration failed', err));
-      });
+    // ── Mobile Keyboard Handling (visualViewport) ──
+    if (window.visualViewport) {
+      const cp = document.querySelector('.control-panel');
+      const handleViewport = () => {
+        if (window.innerWidth <= 768 && cp) {
+          const offset = window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop;
+          cp.style.bottom = `${Math.max(0, offset)}px`;
+          
+          if (document.activeElement && document.activeElement.id === 'text-input') {
+            setTimeout(() => {
+              window.scrollTo(0, document.body.scrollHeight);
+              if (typeof scrollBottom === 'function') scrollBottom();
+            }, 50);
+          }
+        } else if (cp) {
+          cp.style.bottom = '';
+        }
+      };
+      window.visualViewport.addEventListener('resize', handleViewport);
+      window.visualViewport.addEventListener('scroll', handleViewport);
     }
   </script>
 </body>
