@@ -617,7 +617,7 @@ def Information():
     return f"Time: {now.strftime('%H:%M:%S')}\nDate: {now.strftime('%d/%m/%Y')}\nDay: {now.strftime('%A')}\nYear: {now.strftime('%Y')}\n"
 
 
-def RealtimeSearchEngine(prompt, provided_messages=None, user_name=None, model_name="Brainwave 2.5"):
+def RealtimeSearchEngine(prompt, provided_messages=None, user_name=None):
     if provided_messages is None:
         provided_messages = []
     if user_name is None:
@@ -661,7 +661,7 @@ Question: {prompt}
     # We pass a shorter history to prevent old answers from biasing the model
     Answer = ""
     chunk_count = 0
-    for chunk in UniversalAI(rag_user_message, system_prompt=system_content, history=provided_messages[-2:], temperature=0.0, model_name=model_name):
+    for chunk in UniversalAI(rag_user_message, system_prompt=system_content, history=provided_messages[-2:], temperature=0.0):
         Answer += chunk
         chunk_count += 1
         yield Answer

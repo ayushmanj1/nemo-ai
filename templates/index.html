@@ -1963,18 +1963,7 @@
       }
 
       .control-panel {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: var(--bg);
-        z-index: 2000;
-        padding-bottom: env(safe-area-inset-bottom);
-        transition: bottom 0.1s ease-out;
-      }
-
-      #messages {
-        padding-bottom: 160px;
+        padding-bottom: max(32px, env(safe-area-inset-bottom));
       }
 
       .attachment-preview {
@@ -4026,7 +4015,6 @@
               </div>
               <div class="model-dropdown" id="model-dropdown">
                 <div class="model-option active" data-model="Brainwave 2.5">Brainwave 2.5</div>
-                <div class="model-option" data-model="DeepSeek R1">DeepSeek R1</div>
                 <div class="model-option" data-model="Llama Model">Llama Model</div>
                 <div class="model-option" data-model="Cohere Model">Cohere Model</div>
                 <div class="model-option" data-model="Gemini Model">Gemini Model</div>
@@ -4818,19 +4806,16 @@
         
         let body;
         let headers = {};
-        const modelName = document.getElementById('current-model-name')?.innerText || 'Brainwave 2.5';
 
         if (files.length > 0) {
           body = new FormData();
           body.append('text', text);
-          body.append('model', modelName);
           files.forEach(f => body.append('files', f));
           body.append('isGuest', localStorage.getItem('isGuest') === 'true');
         } else {
           headers['Content-Type'] = 'application/json';
           body = JSON.stringify({
             text: text,
-            model: modelName,
             isGuest: localStorage.getItem('isGuest') === 'true'
           });
         }
@@ -6158,26 +6143,13 @@ h1 {
     })(); // end sidebar IIFE
 
 
-    // ── Mobile Keyboard Handling (visualViewport) ──
-    if (window.visualViewport) {
-      const cp = document.querySelector('.control-panel');
-      const handleViewport = () => {
-        if (window.innerWidth <= 768 && cp) {
-          const offset = window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop;
-          cp.style.bottom = `${Math.max(0, offset)}px`;
-          
-          if (document.activeElement && document.activeElement.id === 'text-input') {
-            setTimeout(() => {
-              window.scrollTo(0, document.body.scrollHeight);
-              if (typeof scrollBottom === 'function') scrollBottom();
-            }, 50);
-          }
-        } else if (cp) {
-          cp.style.bottom = '';
-        }
-      };
-      window.visualViewport.addEventListener('resize', handleViewport);
-      window.visualViewport.addEventListener('scroll', handleViewport);
+    // Register Service Worker for PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+          .then(reg => console.log('Service Worker registered', reg))
+          .catch(err => console.error('Service Worker registration failed', err));
+      });
     }
   </script>
 </body>

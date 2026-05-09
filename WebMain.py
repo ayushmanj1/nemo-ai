@@ -143,11 +143,9 @@ def speak():
     if request.is_json:
         data = request.get_json(force=True)
         user_text = (data.get("text") or "").strip()
-        selected_model = data.get("model") or "Brainwave 2.5"
         files = []
     else:
         user_text = request.form.get("text", "").strip()
-        selected_model = request.form.get("model", "Brainwave 2.5")
         files = request.files.getlist("files")
 
     if not user_text and not files:
@@ -221,10 +219,10 @@ def speak():
                     modified_query = QueryModifier(clean_query)
                     
                     if "realtime" in task:
-                        generator = RealtimeSearchEngine(modified_query, provided_messages=history, user_name=username, model_name=selected_model)
+                        generator = RealtimeSearchEngine(modified_query, provided_messages=history, user_name=username)
                     else:
                         is_coding = "content" in task.lower()
-                        generator = ChatBot(modified_query, provided_messages=history, user_name=username, document_context=document_context, mode="coding" if is_coding else "general", model_name=selected_model)
+                        generator = ChatBot(modified_query, provided_messages=history, user_name=username, document_context=document_context, mode="coding" if is_coding else "general")
 
                     last_sent_len = 0
                     for full_answer in generator:

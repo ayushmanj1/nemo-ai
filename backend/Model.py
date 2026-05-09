@@ -39,25 +39,7 @@ REALTIME_KEYWORDS = [
     "death", "alive", "richest", "top 10", "standing", "points table", "result"
 ]
 
-CODING_KEYWORDS = [
-    "python", "javascript", "html", "css", "java", "cpp", "c#", "rust", "code", 
-    "script", "program", "function", "class", "algorithm", "debug", "write a",
-    "create a", "develop", "binary", "hex", "encryption", "react", "nextjs", 
-    "flask", "django", "node", "npm", "sql", "database"
-]
-
-def is_coding_query(query):
-    query_lower = query.lower()
-    for keyword in CODING_KEYWORDS:
-        if re.search(r'\b' + re.escape(keyword) + r'\b', query_lower):
-            return True
-    return False
-
 def is_realtime_query(query):
-    # If it's a coding query, we don't want to force it into realtime via fast pass
-    if is_coding_query(query):
-        return False
-        
     query_lower = query.lower()
     # Check if any keyword matches as a whole word or significant part
     for keyword in REALTIME_KEYWORDS:
@@ -73,9 +55,9 @@ preamble = f"""You are a highly accurate Decision-Making Model for {Assistantnam
 Your ONLY task is to categorize the user's query into one or more categories.
 
 *** CATEGORY LIST: ***
--> 'content topic': For ANY coding request, formal writing, essays, scripts, or long-form applications. (PRIORITY FOR CODING)
--> 'realtime query': For factual info, news, weather, prices, or web searches.
+-> 'realtime query': For ANY factual info, news, weather, prices, or web searches. (PRIORITY)
 -> 'general query': For greetings, jokes, personal/emotive chat, or general conversation.
+-> 'content topic': For formal writing, code, essays, or long-form applications ONLY.
 -> 'generate image prompt': To create images.
 
 *** MANDATORY RULES: ***
@@ -83,9 +65,8 @@ Your ONLY task is to categorize the user's query into one or more categories.
 2. DO NOT engage in conversation. 
 3. DO NOT explain your decision. 
 4. DO NOT provide any text other than the categorized tags.
-5. If the query asks for CODE or a SCRIPT (e.g., "python code for weather"), ALWAYS prioritize 'content topic'.
-6. If the user query is multiple things, separate tags with a comma.
-7. If the user query matches NO specific task, always choose 'general query'.
+5. If the user query is multiple things, separate tags with a comma.
+6. If the user query matches NO specific task, always choose 'general query'.
 """
 
 # Define a chat history with predefined user-chatbot interactions for context.
