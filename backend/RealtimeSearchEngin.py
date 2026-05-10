@@ -10,6 +10,28 @@ from urllib.parse import quote_plus
 from dotenv import load_dotenv
 from backend.Utils import UniversalAI
 import warnings
+import time as _time
+
+# ── Rate Limit Tracker ──────────────────────────────────────────────
+# Tracks when an API hit a rate limit so we skip it for a cooldown period
+_RATE_LIMIT_COOLDOWN = {}  # {"tavily": timestamp, "serper": timestamp}
+RATE_LIMIT_COOLDOWN_SECONDS = 60  # Skip API for 60s after a 429
+
+def _is_rate_limited(api_name):
+    """Check if an API is currently in cooldown from a rate limit."""
+    if api_name in _RATE_LIMIT_COOLDOWN:
+        elapsed = _time.time() - _RATE_LIMIT_COOLDOWN[api_name]
+        if elapsed < RATE_LIMIT_COOLDOWN_SECONDS:
+            print(f"[RateLimit] ⏳ {api_name} is rate-limited, {RATE_LIMIT_COOLDOWN_SECONDS - elapsed:.0f}s remaining")
+            return True
+        else:
+            del _RATE_LIMIT_COOLDOWN[api_name]
+    return False
+
+def _mark_rate_limited(api_name):
+    """Mark an API as rate-limited."""
+    _RATE_LIMIT_COOLDOWN[api_name] = _time.time()
+    print(f"[RateLimit] 🚫 {api_name} marked as rate-limited for {RATE_LIMIT_COOLDOWN_SECONDS}s")
 
 # Force UTF-8 encodinggit 
 if sys.stdout.encoding != 'utf-8':
@@ -370,42 +392,87 @@ def fetch_google_news_rss(query):
 
 
 def fetch_serper_search(query):
-    """Fetch search results from Serper API."""
+    """Fetch search results from Serper API (with rate limit detection)."""
     results = []
     api_key = os.getenv("SERPER_API_KEY")
     if not api_key:
+        print("[SerperAPI] ⚠️ No SERPER_API_KEY found in .env")
+        return results
+    if _is_rate_limited("serper"):
         return results
     try:
         print(f"[SerperAPI] 🔍 Fetching Serper results for: '{query}'")
         url = "https://google.serper.dev/search"
         payload = json.dumps({
             "q": query,
-            "num": 5
+            "num": 8
         })
         headers = {
             'X-API-KEY': api_key,
             'Content-Type': 'application/json'
         }
-        resp = requests.request("POST", url, headers=headers, data=payload, timeout=8)
-        if resp.status_code == 200:
-            data = resp.json()
-            for r in data.get('organic', [])[:5]:
+        resp = requests.post(url, headers=headers, data=payload, timeout=10)
+        if resp.status_code == 429:
+            _mark_rate_limited("serper")
+            print(f"[SerperAPI] ⚠️ Rate limited (429)")
+            return results
+        if resp.status_code != 200:
+            print(f"[SerperAPI] ⚠️ HTTP {resp.status_code}")
+            return results
+
+        data = resp.json()
+
+        # Extract Knowledge Graph (direct answer like "Rekha Gupta is CM of Delhi")
+        kg = data.get('knowledgeGraph', {})
+        if kg:
+            kg_title = kg.get('title', '')
+            kg_desc = kg.get('description', '')
+            kg_type = kg.get('type', '')
+            attrs = kg.get('attributes', {})
+            attr_text = ". ".join([f"{k}: {v}" for k, v in attrs.items()]) if attrs else ""
+            body = f"{kg_desc}. {kg_type}. {attr_text}".strip(". ")
+            if kg_title:
                 results.append({
-                    'title': f"[SERPER] {r.get('title', 'No Title')}",
-                    'body': r.get('snippet', 'No Description'),
-                    'href': r.get('link', '#')
+                    'title': f"[SERPER-KG] {kg_title}",
+                    'body': body or kg_title,
+                    'href': '#'
                 })
-            print(f"[SerperAPI] ✅ Got {len(results)} results")
+                print(f"[SerperAPI] 📊 Knowledge Graph: {kg_title}")
+
+        # Extract Answer Box
+        answer_box = data.get('answerBox', {})
+        if answer_box:
+            ab_answer = answer_box.get('answer', '') or answer_box.get('snippet', '')
+            ab_title = answer_box.get('title', 'Direct Answer')
+            if ab_answer:
+                results.append({
+                    'title': f"[SERPER-ANSWER] {ab_title}",
+                    'body': ab_answer,
+                    'href': answer_box.get('link', '#')
+                })
+                print(f"[SerperAPI] 💡 Answer Box: {ab_answer[:80]}")
+
+        # Extract Organic Results
+        for r in data.get('organic', [])[:5]:
+            results.append({
+                'title': f"[SERPER] {r.get('title', 'No Title')}",
+                'body': r.get('snippet', 'No Description'),
+                'href': r.get('link', '#')
+            })
+        print(f"[SerperAPI] ✅ Got {len(results)} total results")
     except Exception as e:
         print(f"[SerperAPI] ❌ Error: {e}")
     return results
 
 
 def fetch_tavily_search(query):
-    """Fetch search results from Tavily API."""
+    """Fetch search results from Tavily API (with include_answer and rate limit detection)."""
     results = []
     api_key = os.getenv("TAVILY_API_KEY")
     if not api_key:
+        print("[TavilyAPI] ⚠️ No TAVILY_API_KEY found in .env")
+        return results
+    if _is_rate_limited("tavily"):
         return results
     try:
         print(f"[TavilyAPI] 🔍 Fetching Tavily results for: '{query}'")
@@ -413,21 +480,40 @@ def fetch_tavily_search(query):
         payload = {
             "api_key": api_key,
             "query": query,
-            "search_depth": "basic",
-            "include_answer": False,
+            "search_depth": "advanced",
+            "include_answer": True,
             "max_results": 5
         }
         headers = {'Content-Type': 'application/json'}
-        resp = requests.post(url, json=payload, headers=headers, timeout=8)
-        if resp.status_code == 200:
-            data = resp.json()
-            for r in data.get('results', []):
-                results.append({
-                    'title': f"[TAVILY] {r.get('title', 'No Title')}",
-                    'body': r.get('content', 'No Description'),
-                    'href': r.get('url', '#')
-                })
-            print(f"[TavilyAPI] ✅ Got {len(results)} results")
+        resp = requests.post(url, json=payload, headers=headers, timeout=10)
+        if resp.status_code == 429:
+            _mark_rate_limited("tavily")
+            print(f"[TavilyAPI] ⚠️ Rate limited (429)")
+            return results
+        if resp.status_code != 200:
+            print(f"[TavilyAPI] ⚠️ HTTP {resp.status_code}: {resp.text[:200]}")
+            return results
+
+        data = resp.json()
+
+        # Extract Tavily's direct answer (most valuable for factual queries)
+        direct_answer = data.get('answer', '')
+        if direct_answer:
+            results.append({
+                'title': '[TAVILY-ANSWER] Direct Answer',
+                'body': direct_answer,
+                'href': '#'
+            })
+            print(f"[TavilyAPI] 💡 Direct Answer: {direct_answer[:100]}")
+
+        # Extract search results
+        for r in data.get('results', []):
+            results.append({
+                'title': f"[TAVILY] {r.get('title', 'No Title')}",
+                'body': r.get('content', 'No Description'),
+                'href': r.get('url', '#')
+            })
+        print(f"[TavilyAPI] ✅ Got {len(results)} total results")
     except Exception as e:
         print(f"[TavilyAPI] ❌ Error: {e}")
     return results
@@ -438,8 +524,8 @@ def fetch_tavily_search(query):
 # =====================================================================
 
 def GoogleSearch(query, query_types=None):
-    """Multi-source search function that prioritizes the right sources
-    based on query type."""
+    """Multi-source search: Tavily & Serper are PRIMARY engines.
+    Falls back to DuckDuckGo/Google only when primary engines fail or are rate-limited."""
     query = query.strip()
     while query and query[-1] in '?!.':
         query = query[:-1].strip()
@@ -447,12 +533,15 @@ def GoogleSearch(query, query_types=None):
     if query_types is None:
         query_types = detect_query_type(query)
 
+    is_time_sensitive = "current_affairs" in query_types or "temporal" in query_types
+    search_query = enhance_query_for_recency(query) if is_time_sensitive else query
+
     print(f"[GoogleSearch] 🔍 Searching for: \"{query}\" (types: {query_types})")
+    print(f"[GoogleSearch] 🔍 Enhanced query: \"{search_query}\"")
     results = []
+    primary_succeeded = False
 
-    # --- DEDICATED APIs FIRST (most accurate for specific data) ---
-
-    # Weather API
+    # ── STEP 0: Dedicated APIs for specific data types ──────────────
     if "weather" in query_types:
         weather_result = fetch_weather(query)
         if weather_result:
@@ -462,49 +551,50 @@ def GoogleSearch(query, query_types=None):
                 'href': f'https://wttr.in/{query}'
             })
 
-    # Financial APIs
     if "financial" in query_types:
         fin_results = fetch_financial_data(query)
         results.extend(fin_results)
 
-    # --- GOOGLE NEWS RSS (best for current affairs, always fresh) ---
-    if "current_affairs" in query_types or "temporal" in query_types:
-        # For current affairs, enhance query with the year
-        news_query = enhance_query_for_recency(query)
-        news_results = fetch_google_news_rss(news_query)
-        results.extend(news_results)
+    # ── STEP 1: TAVILY (Primary Search Engine) ──────────────────────
+    try:
+        tavily_results = fetch_tavily_search(search_query)
+        if tavily_results:
+            results.extend(tavily_results)
+            primary_succeeded = True
+            print(f"[GoogleSearch] ✅ Tavily returned {len(tavily_results)} results")
+    except Exception as e:
+        print(f"[GoogleSearch] Tavily Error: {e}")
 
-    # --- TAVILY SEARCH (Primary for general web search) ---
-    if len(results) < 3:
-        try:
-            tavily_results = fetch_tavily_search(enhance_query_for_recency(query) if "temporal" in query_types else query)
-            if tavily_results:
-                results.extend(tavily_results)
-        except Exception as e:
-            print(f"[GoogleSearch] Tavily Error: {e}")
+    # ── STEP 2: SERPER (Secondary, or supplement) ───────────────────
+    # Always try Serper too — it has Knowledge Graph and Answer Box
+    # that Tavily might not have, giving richer answers
+    try:
+        serper_results = fetch_serper_search(search_query)
+        if serper_results:
+            results.extend(serper_results)
+            primary_succeeded = True
+            print(f"[GoogleSearch] ✅ Serper returned {len(serper_results)} results")
+    except Exception as e:
+        print(f"[GoogleSearch] Serper Error: {e}")
 
-    # --- SERPER SEARCH (Secondary) ---
-    if len(results) < 3:
-        try:
-            serper_results = fetch_serper_search(enhance_query_for_recency(query) if "temporal" in query_types else query)
-            if serper_results:
-                results.extend(serper_results)
-        except Exception as e:
-            print(f"[GoogleSearch] Serper Error: {e}")
+    # ── STEP 3: Google News RSS (supplement for current affairs) ────
+    if is_time_sensitive:
+        news_results = fetch_google_news_rss(search_query)
+        if news_results:
+            results.extend(news_results[:3])  # Limit to 3 news articles
 
-    # --- DUCKDUCKGO SEARCH (Tertiary fallback) ---
-    if len(results) < 3:
+    # ── STEP 4: FALLBACKS (only if primary engines both failed) ─────
+    if not primary_succeeded:
+        print(f"[GoogleSearch] ⚠️ Primary engines failed, using fallbacks...")
+
+        # Fallback A: DuckDuckGo
         try:
             from duckduckgo_search import DDGS
             with DDGS() as ddgs:
-                # For current affairs / temporal, prioritize news over text
-                if "current_affairs" in query_types or "temporal" in query_types:
-                    enhanced_query = enhance_query_for_recency(query)
-
-                    # Try DDGS news first
+                if is_time_sensitive:
                     try:
-                        print(f"[GoogleSearch] Trying DDGS News: '{enhanced_query}'")
-                        news = list(ddgs.news(enhanced_query, max_results=5))
+                        print(f"[GoogleSearch] Trying DDGS News...")
+                        news = list(ddgs.news(search_query, max_results=5))
                         for r in news:
                             results.append({
                                 'title': "[NEWS] " + r.get('title', 'No Title'),
@@ -513,98 +603,67 @@ def GoogleSearch(query, query_types=None):
                             })
                     except Exception as e:
                         print(f"[GoogleSearch] DDGS News Error: {e}")
-
-                    # Then text search with year
-                    if len(results) < 5:
-                        try:
-                            print(f"[GoogleSearch] Trying DDGS Text: '{enhanced_query}'")
-                            text = list(ddgs.text(enhanced_query, max_results=5))
-                            for r in text:
-                                results.append({
-                                    'title': r.get('title', 'No Title'),
-                                    'body': r.get('body', 'No Description'),
-                                    'href': r.get('href', '#')
-                                })
-                        except Exception as e:
-                            print(f"[GoogleSearch] DDGS Text Error: {e}")
-                else:
-                    # General queries — text search first
-                    try:
-                        print(f"[GoogleSearch] Trying DDGS Text Search...")
-                        text_results = list(ddgs.text(query, max_results=5))
-                        for r in text_results:
-                            results.append({
-                                'title': r.get('title', 'No Title'),
-                                'body': r.get('body', 'No Description'),
-                                'href': r.get('href', '#')
-                            })
-                    except Exception as e:
-                        print(f"[GoogleSearch] DDGS Text Error: {e}")
-
-                    # Also try news if we don't have enough
-                    if len(results) < 3:
-                        try:
-                            print(f"[GoogleSearch] Trying DDGS News...")
-                            news_results = list(ddgs.news(query, max_results=3))
-                            for r in news_results:
-                                results.append({
-                                    'title': "[NEWS] " + r.get('title', 'No Title'),
-                                    'body': r.get('body', 'No Description'),
-                                    'href': r.get('url', '#')
-                                })
-                        except Exception as e:
-                            print(f"[GoogleSearch] DDGS News Error: {e}")
-        except Exception as e:
-            print(f"[GoogleSearch] DDGS Error: {e}")
-
-    # --- DDG Instant Answer API (stable, good for definitions) ---
-    if len(results) < 3 and "general" in query_types:
-        try:
-            print(f"[GoogleSearch] Trying DuckDuckGo Instant Answer API...")
-            api_url = f"https://api.duckduckgo.com/?q={query}&format=json"
-            resp = requests.get(api_url, timeout=5)
-            if resp.status_code == 200:
-                data = resp.json()
-                if data.get('AbstractText'):
-                    results.append({
-                        'title': "[API] " + data.get('Heading', 'Summary'),
-                        'body': data.get('AbstractText'),
-                        'href': data.get('AbstractURL', '#')
-                    })
-                for r in data.get('RelatedTopics', [])[:2]:
-                    if 'Text' in r:
+                try:
+                    print(f"[GoogleSearch] Trying DDGS Text...")
+                    text = list(ddgs.text(search_query, max_results=5))
+                    for r in text:
                         results.append({
-                            'title': "[Related] " + query,
-                            'body': r.get('Text'),
-                            'href': r.get('FirstURL', '#')
+                            'title': r.get('title', 'No Title'),
+                            'body': r.get('body', 'No Description'),
+                            'href': r.get('href', '#')
                         })
+                except Exception as e:
+                    print(f"[GoogleSearch] DDGS Text Error: {e}")
         except Exception as e:
-            print(f"[GoogleSearch] DDG API Error: {e}")
+            print(f"[GoogleSearch] DDGS Import Error: {e}")
 
-    # --- Google Search Fallback ---
-    if not results:
-        print(f"[GoogleSearch] ⚠️ Attempting Google Search Fallback...")
-        try:
-            from googlesearch import search
-            g_query = enhance_query_for_recency(query) if ("current_affairs" in query_types or "temporal" in query_types) else query
-            google_results = search(g_query, num_results=5)
-            for r in google_results:
-                results.append({
-                    'title': "[GOOGLE] " + query,
-                    'body': "Search result for " + query,
-                    'href': r if isinstance(r, str) else getattr(r, 'url', '#')
-                })
-        except Exception as ge:
-            print(f"[GoogleSearch] Google Search Error: {ge}")
+        # Fallback B: DDG Instant Answer API
+        if len(results) < 3:
+            try:
+                print(f"[GoogleSearch] Trying DDG Instant Answer API...")
+                api_url = f"https://api.duckduckgo.com/?q={query}&format=json"
+                resp = requests.get(api_url, timeout=5)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    if data.get('AbstractText'):
+                        results.append({
+                            'title': "[API] " + data.get('Heading', 'Summary'),
+                            'body': data.get('AbstractText'),
+                            'href': data.get('AbstractURL', '#')
+                        })
+                    for r in data.get('RelatedTopics', [])[:2]:
+                        if 'Text' in r:
+                            results.append({
+                                'title': "[Related] " + query,
+                                'body': r.get('Text'),
+                                'href': r.get('FirstURL', '#')
+                            })
+            except Exception as e:
+                print(f"[GoogleSearch] DDG API Error: {e}")
 
-    # --- Also try Google News RSS as last resort if we still have nothing ---
-    if not results:
-        news_results = fetch_google_news_rss(query)
-        results.extend(news_results)
+        # Fallback C: Google Search (last resort)
+        if not results:
+            try:
+                from googlesearch import search
+                google_results = search(search_query, num_results=5)
+                for r in google_results:
+                    results.append({
+                        'title': "[GOOGLE] " + query,
+                        'body': "Search result for " + query,
+                        'href': r if isinstance(r, str) else getattr(r, 'url', '#')
+                    })
+            except Exception as ge:
+                print(f"[GoogleSearch] Google Search Error: {ge}")
+
+        # Fallback D: Google News RSS as absolute last resort
+        if not results:
+            news_results = fetch_google_news_rss(query)
+            results.extend(news_results)
 
     if not results:
         return f"No search results found for '{query}'."
 
+    print(f"[GoogleSearch] 🏁 Total results collected: {len(results)}")
     Answer = f"The real-time search results for '{query}' are:\n[start]\n"
     for i in results:
         Answer += f"Title: {i.get('title')}\nDescription: {i.get('body')}\nUrl: {i.get('href')}\n\n"

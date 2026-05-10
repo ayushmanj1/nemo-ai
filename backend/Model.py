@@ -36,7 +36,13 @@ REALTIME_KEYWORDS = [
     "gold", "silver", "bitcoin", "ipl", "football", "cricket", "president", 
     "prime minister", "governor", "ceo", "releasing", "movie", "match today",
     "cm", "pm", "chief minister", "minister", "capital", "population", "born", 
-    "death", "alive", "richest", "top 10", "standing", "points table", "result"
+    "death", "alive", "richest", "top 10", "standing", "points table", "result",
+    "who won", "who lost", "winner", "when is", "when did", "where is", "how many",
+    "how much", "salary", "net worth", "age of", "height of", "wife of", "husband of",
+    "founder", "owner", "director", "actor", "actress", "singer", "player",
+    "election", "war", "conflict", "deal", "merger", "acquisition", "launched",
+    "released", "announced", "controversy", "scandal", "arrested", "died",
+    "ranking", "ranked", "fastest", "tallest", "biggest", "smallest", "record"
 ]
 
 def is_realtime_query(query):

@@ -505,8 +505,7 @@
     <!-- Direct Subdomain Script (Bypasses many generic ad-blockers) -->
     <script>
       function skipLogin() {
-        localStorage.setItem('skipLogin', 'true');
-        window.location.href = "/";
+        window.location.href = "/?intro=true";
       }
 
       (function() {
@@ -621,20 +620,45 @@
         script.src = 'https://alert-narwhal-88.clerk.accounts.dev/npm/@clerk/clerk-js@4/dist/clerk.browser.js';
         script.onload = async () => {
           await window.Clerk.load();
-          window.Clerk.mountSignIn(document.getElementById('clerk-sign-in'), {
-            appearance: {
-              layout: { socialButtonsPlacement: 'bottom' },
-              elements: {
-                rootBox: 'w-full',
-                card: 'shadow-none w-full bg-transparent border-0',
-                header: 'hidden',
-                formButtonPrimary: 'bg-[#1a1a2e] hover:bg-[#2a2a4e] text-white rounded-md py-3 font-semibold w-full',
-                formFieldInput: 'rounded-md border border-gray-200 py-3 px-4 focus:ring-1 focus:ring-[#22d3ee] focus:border-[#22d3ee] outline-none w-full',
-                footerActionLink: 'text-[#22d3ee] font-medium',
-                formFieldAction: 'text-[#22d3ee] font-medium'
+          
+          if (window.Clerk.user) {
+            // If already signed in, show a continue button instead of the sign-in form
+            const signInDiv = document.getElementById('clerk-sign-in');
+            signInDiv.innerHTML = `
+              <div class="flex flex-col items-center gap-6 py-4 w-full">
+                <div class="flex items-center gap-4 bg-white/50 p-4 rounded-2xl w-full border border-gray-100">
+                  <img src="${window.Clerk.user.imageUrl}" class="w-12 h-12 rounded-full border-2 border-[#1a1a2e]">
+                  <div class="text-left">
+                    <p class="text-[#1a1a2e] font-bold text-sm line-clamp-1">${window.Clerk.user.fullName || window.Clerk.user.username}</p>
+                    <p class="text-xs text-gray-500">Welcome back</p>
+                  </div>
+                </div>
+                <button onclick="skipLogin()" class="bg-white text-black rounded-2xl py-4 px-8 font-light font-syne w-full transition-all hover:shadow-md active:scale-95 border border-gray-200 uppercase tracking-[0.2em] text-sm">
+                  ENTER CHAT
+                </button>
+                <button onclick="window.Clerk.signOut().then(() => location.reload())" class="bg-white text-black rounded-2xl py-4 px-8 font-light font-syne w-full transition-all hover:shadow-md active:scale-95 border border-gray-200 uppercase tracking-[0.2em] text-xs">
+                  Sign out
+                </button>
+              </div>
+            `;
+          } else {
+            window.Clerk.mountSignIn(document.getElementById('clerk-sign-in'), {
+              afterSignInUrl: '/?intro=true',
+              afterSignUpUrl: '/?intro=true',
+              appearance: {
+                layout: { socialButtonsPlacement: 'bottom' },
+                elements: {
+                  rootBox: 'w-full',
+                  card: 'shadow-none w-full bg-transparent border-0',
+                  header: 'hidden',
+                  formButtonPrimary: 'bg-[#1a1a2e] hover:bg-[#2a2a4e] text-white rounded-md py-3 font-semibold w-full',
+                  formFieldInput: 'rounded-md border border-gray-200 py-3 px-4 focus:ring-1 focus:ring-[#22d3ee] focus:border-[#22d3ee] outline-none w-full',
+                  footerActionLink: 'text-[#22d3ee] font-medium',
+                  formFieldAction: 'text-[#22d3ee] font-medium'
+                }
               }
-            }
-          });
+            });
+          }
         };
         script.onerror = () => {
           document.getElementById('clerk-sign-in').innerHTML = `

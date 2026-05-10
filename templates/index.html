@@ -52,11 +52,20 @@
     type="text/javascript"
   ></script>
   <script>
-    window.addEventListener('load', async function () {
-      await Clerk.load();
-      const isSkipped = localStorage.getItem('skipLogin') === 'true';
-      if (!Clerk.user && !isSkipped) {
+    // Force intro/login on every refresh
+    (function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (!urlParams.has('intro')) {
         window.location.href = "/login";
+      } else {
+        window.history.replaceState({}, document.title, "/");
+      }
+    })();
+  </script>
+  <script>
+    window.addEventListener('load', async function () {
+      if (typeof Clerk !== 'undefined') {
+        await Clerk.load();
       }
     });
   </script>
@@ -177,13 +186,6 @@
     
     #chat-sidebar .sb-ctrl-btn:hover,
     #chat-sidebar .sb-profile-row:hover,
-    #chat-sidebar .sb-capsule:hover {
-      background: #dbd3c9 !important;
-      transform: scale(1.02);
-      z-index: 10;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.04);
-    }
-    
     #chat-sidebar .sb-capsule {
       background: transparent !important;
       border: none !important;
@@ -194,6 +196,14 @@
       background: transparent !important;
       border: none !important;
       box-shadow: none !important;
+    }
+
+    #chat-sidebar .sb-capsule:hover,
+    #chat-sidebar .sb-capsule.menu-open {
+      background: #dbd3c9 !important;
+      transform: scale(1.02);
+      z-index: 10;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.04);
     }
 
     /* ── Dark mode sidebar overrides ── */
@@ -219,14 +229,6 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
     }
 
-    [data-theme="dark"] #chat-sidebar .sb-ctrl-btn:hover,
-    [data-theme="dark"] #chat-sidebar .sb-profile-row:hover,
-    [data-theme="dark"] #chat-sidebar .sb-capsule:hover {
-      background: rgba(255,255,255,0.08) !important;
-      transform: scale(1.03);
-      z-index: 10;
-    }
-
     [data-theme="dark"] #chat-sidebar .sb-capsule {
       background: transparent !important;
       border: none !important;
@@ -239,13 +241,22 @@
       box-shadow: none !important;
     }
 
-    [data-theme="dark"] #chat-sidebar .sb-capsule-delete {
-      background: rgba(255,255,255,0.08);
-      color: #ececec;
+    [data-theme="dark"] #chat-sidebar .sb-ctrl-btn:hover,
+    [data-theme="dark"] #chat-sidebar .sb-profile-row:hover,
+    [data-theme="dark"] #chat-sidebar .sb-capsule:hover,
+    [data-theme="dark"] #chat-sidebar .sb-capsule.menu-open {
+      background: rgba(255,255,255,0.08) !important;
+      transform: scale(1.03);
+      z-index: 10;
     }
-    [data-theme="dark"] #chat-sidebar .sb-capsule-delete:hover {
-      background: rgba(239, 68, 68, 0.15);
-      color: #ef4444;
+
+    [data-theme="dark"] #chat-sidebar .sb-capsule-options {
+      background: transparent;
+      color: #8e8ea0;
+    }
+    [data-theme="dark"] #chat-sidebar .sb-capsule-options:hover {
+      background: transparent;
+      color: #ffffff;
     }
 
     [data-theme="dark"] #chat-sidebar .sb-divider {
@@ -498,11 +509,10 @@
     .sb-capsule {
       border-radius: 6px;
       background: transparent;
-      padding: 10px 14px;
-      margin-bottom: 2px;
+      padding: 6px 12px;
+      margin-bottom: 1px;
       font-size: 13px; font-weight: 400;
       color: var(--text-primary);
-      overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
       cursor: pointer;
       transition: all 0.15s ease;
       display: flex; align-items: center; gap: 8px;
@@ -513,7 +523,7 @@
       from { opacity: 0; transform: translateY(10px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-    .sb-capsule:hover {
+    .sb-capsule:hover, .sb-capsule.menu-open {
       background: var(--hover-bg);
       transform: scale(1.03);
       z-index: 10;
@@ -527,25 +537,66 @@
     }
 
     .sb-capsule-text { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; min-width: 0; }
-    .sb-capsule-delete {
-      opacity: 0; width: 22px; height: 22px; border-radius: 50%;
-      border: none; background: #f1f5f9; color: #000000;
+    .sb-capsule-options {
+      opacity: 0; width: 22px; height: 22px;
+      border: none; background: transparent; color: var(--text-muted);
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; transition: all 0.15s; flex-shrink: 0;
     }
-    .sb-capsule:hover .sb-capsule-delete { opacity: 1; }
-    .sb-capsule-delete:hover { background: #e2e8f0; color: #000000; }
-    .sb-capsule-delete svg { width: 12px; height: 12px; }
+    .sb-capsule:hover .sb-capsule-options, .sb-capsule.menu-open .sb-capsule-options { opacity: 1; }
+    .sb-capsule-options:hover { background: transparent; color: var(--text-primary); }
+    .sb-capsule-options svg { width: 14px; height: 14px; }
+
+    .sb-capsule-options-wrap {
+      position: relative;
+      display: flex;
+    }
+    .sb-capsule-menu-container {
+      position: absolute; right: 0; top: 100%;
+      padding-top: 6px;
+      z-index: 1000;
+      display: none;
+    }
+    .sb-capsule-options-wrap:hover .sb-capsule-menu-container {
+      display: flex;
+    }
+
+    .sb-capsule-menu {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px; padding: 4px;
+      box-shadow: 0 4px 12px var(--shadow);
+      display: flex;
+      flex-direction: column;
+      min-width: 120px;
+    }
+    [data-theme="light"] .sb-capsule-menu {
+      background: #ffffff;
+    }
+    .sb-menu-item {
+      padding: 8px 12px; font-size: 13px; cursor: pointer; border-radius: 6px;
+      color: var(--text-primary);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .sb-menu-item:hover {
+      background: var(--hover-bg);
+    }
+    .sb-menu-item.danger {
+      color: var(--red);
+    }
+    .sb-menu-item.danger:hover {
+      background: var(--red-glow);
+    }
 
     .sb-empty-state {
       padding: 24px 12px; text-align: center; color: var(--text-muted);
       font-size: 13px; line-height: 1.6;
     }
 
-    /* ═══ PROFILE CARD ═══ */
-    .sb-profile-card {
-      margin: auto 10px 12px 10px; padding: 10px 12px; flex-shrink: 0;
-      animation: sbCardIn 420ms cubic-bezier(0.22, 1, 0.36, 1) 200ms both;
+    /* ═══ PROFILE SECTION ═══ */
+    .sb-profile-section {
+      padding: 10px 12px 14px 12px; flex-shrink: 0;
+      margin-top: auto; /* Push it to the bottom */
     }
     .sb-profile-row {
       display: flex; align-items: center; gap: 10px;
@@ -574,10 +625,8 @@
     .sb-profile-chevron { color: var(--text-muted); flex-shrink: 0; }
     .sb-profile-chevron svg { width: 16px; height: 16px; }
 
-    #chat-sidebar.collapsed .sb-profile-card { 
-      margin: auto 6px 12px 6px; padding: 8px 4px; 
-      background: transparent; border: none; box-shadow: none;
-      backdrop-filter: none; -webkit-backdrop-filter: none;
+    #chat-sidebar.collapsed .sb-profile-section { 
+      padding: 8px 4px 12px 4px; 
     }
     #chat-sidebar.collapsed .sb-profile-row { justify-content: center; padding: 4px 0; gap: 0; }
     #chat-sidebar.collapsed .sb-profile-info,
@@ -2816,15 +2865,8 @@
         gap: 10px;
         justify-content: flex-start;
       }
-      #chat-sidebar.collapsed .sb-profile-card {
-        margin: auto 10px 12px 10px;
-        padding: 10px 12px;
-        background: var(--glass-bg-strong) !important;
-        border: 1px solid var(--glass-border) !important;
-      }
-      [data-theme="dark"] #chat-sidebar.collapsed .sb-profile-card {
-        background: #141414 !important;
-        border: 1px solid rgba(255,255,255,0.08) !important;
+      #chat-sidebar.collapsed .sb-profile-section {
+        padding: 10px 12px 14px 12px;
       }
       #chat-sidebar.collapsed .sb-profile-row {
         justify-content: flex-start;
@@ -3764,7 +3806,7 @@
     .mode-option, .color-dot, .settings-tab,
     .editor-tab, .editor-action-icon, .add-file-btn,
     .msg-action-btn, .copy-btn, .sb-action-btn,
-    .sb-capsule-delete, .remove-file, .file-chip,
+    .sb-capsule-options, .remove-file, .file-chip,
     #send-btn, #mic-btn, #attach-btn,
     .sb-profile-row, .pricing-close, .settings-close {
       touch-action: manipulation;
@@ -3796,7 +3838,7 @@
     }
 
     /* ── Minimum touch target sizes (44×44 Apple HIG) ── */
-    .sb-capsule-delete {
+    .sb-capsule-options {
       min-width: 44px;
       min-height: 44px;
     }
@@ -4111,11 +4153,24 @@
       .msg-actions {
         opacity: 1 !important;
       }
-      /* Capsule delete always visible on mobile */
-      .sb-capsule .sb-capsule-delete {
+      /* Capsule options always visible on mobile */
+      .sb-capsule .sb-capsule-options {
         opacity: 0.6;
       }
     }
+
+    /* ── Smooth Theme Transition ── */
+    html.theme-transition *,
+    html.theme-transition *::before,
+    html.theme-transition *::after {
+      transition: background-color 0.3s ease-out,
+                  background 0.3s ease-out,
+                  color 0.3s ease-out,
+                  fill 0.3s ease-out,
+                  stroke 0.3s ease-out !important;
+      transition-delay: 0s !important;
+    }
+
     /* ── Pull Cord (Theme Toggle) ── */
     #pull-cord-wrap {
       position: absolute;
@@ -4233,18 +4288,20 @@
           <div class="sb-empty-state">No chats yet.<br>Start a new conversation!</div>
         </div>
       </div>
-    </div>
 
-    <!-- ═══ PROFILE CARD ═══ -->
-    <div class="sb-glass-card sb-profile-card">
-      <div class="sb-profile-row" id="sb-profile-btn">
-        <div class="sb-profile-avatar" id="sb-user-avatar">?</div>
-        <div class="sb-profile-info sb-text-fade">
-          <div class="sb-profile-name-text" id="sb-user-name">Guest User</div>
-          <div class="sb-profile-sub" id="sb-user-status">Sign In</div>
-        </div>
-        <div class="sb-profile-chevron">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      <div class="sb-divider"></div>
+
+      <!-- ═══ PROFILE SECTION (MERGED) ═══ -->
+      <div class="sb-profile-section">
+        <div class="sb-profile-row" id="sb-profile-btn">
+          <div class="sb-profile-avatar" id="sb-user-avatar">?</div>
+          <div class="sb-profile-info sb-text-fade">
+            <div class="sb-profile-name-text" id="sb-user-name">Guest User</div>
+            <div class="sb-profile-sub" id="sb-user-status">Sign In</div>
+          </div>
+          <div class="sb-profile-chevron">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </div>
         </div>
       </div>
     </div>
@@ -4779,10 +4836,7 @@
             const app = document.getElementById('app');
             const currentAppearance = getClerkAppearance();
 
-            const isSkipped = localStorage.getItem('skipLogin') === 'true';
-
             if (window.Clerk.user) {
-              localStorage.removeItem('skipLogin'); // Clear skip if signed in
               const user = window.Clerk.user;
               if (signInBtn) signInBtn.style.display = 'none';
               if (userButtonDiv) userButtonDiv.style.display = 'block';
@@ -6035,6 +6089,10 @@
       if (pullCord) {
         pullCord.addEventListener('mousedown', () => {
           playClickSound();
+
+          // Apply smooth transition
+          document.documentElement.classList.add('theme-transition');
+
           const current = document.documentElement.getAttribute('data-theme');
           const next = current === 'dark' ? 'light' : 'dark';
           document.documentElement.setAttribute('data-theme', next);
@@ -6042,6 +6100,11 @@
           
           // Update theme color meta
           document.querySelector('meta[name="theme-color"]')?.setAttribute('content', next === 'dark' ? '#050505' : '#ffffff');
+
+          // Remove transition class after animation completes
+          setTimeout(() => {
+            document.documentElement.classList.remove('theme-transition');
+          }, 450);
 
           // Sync Monaco Editor theme
           if (window.monacoEditor) {
@@ -6171,7 +6234,6 @@
         if (id === activeId) {
           chats.length > 0 ? switchChat(chats[0].id) : createNewChat();
         } else { renderList(''); }
-        showToast("Chat deleted", "success");
       }
 
       function switchChat(id) {
@@ -6205,18 +6267,43 @@
           cap.title = chat.title;
           cap.innerHTML =
             '<span class="sb-capsule-text">' + escHtml(chat.title) + '</span>' +
-            '<button class="sb-capsule-delete" title="Delete">' +
-              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
-            '</button>';
+            '<div class="sb-capsule-options-wrap">' +
+              '<button class="sb-capsule-options" title="Options">' +
+                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>' +
+              '</button>' +
+              '<div class="sb-capsule-menu-container">' +
+                '<div class="sb-capsule-menu">' +
+                   '<div class="sb-menu-item" data-action="open">Open</div>' +
+                   '<div class="sb-menu-item danger" data-action="delete">Delete</div>' +
+                '</div>' +
+              '</div>' +
+            '</div>';
+          
+          const menu = cap.querySelector('.sb-capsule-menu');
+
+          // Handle menu items
+          menu.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const action = e.target.closest('.sb-menu-item')?.dataset.action;
+            if (!action) return;
+
+            if (action === 'open') {
+              switchChat(chat.id);
+            } else if (action === 'delete') {
+              deleteChat(chat.id);
+            }
+          });
+
           cap.addEventListener('click', (e) => {
-            if (e.target.closest('.sb-capsule-delete')) return;
+            if (e.target.closest('.sb-capsule-options') || e.target.closest('.sb-capsule-menu')) return;
             switchChat(chat.id);
           });
-          cap.querySelector('.sb-capsule-delete').addEventListener('click', (e) => {
-            e.stopPropagation(); deleteChat(chat.id);
-          });
+
           sbContainer.appendChild(cap);
         });
+
+        // No longer need click-outside handling since hover takes care of it
+
       }
 
       function renderSearchResults(query) {
@@ -7028,10 +7115,10 @@ h1 {
 
         longPressTimer = setTimeout(() => {
           if ('vibrate' in navigator) navigator.vibrate(25);
-          const deleteBtn = capsule.querySelector('.sb-capsule-delete');
-          if (deleteBtn) {
-            deleteBtn.style.opacity = '1';
-            setTimeout(() => { deleteBtn.style.opacity = ''; }, 3000);
+          const optionsBtn = capsule.querySelector('.sb-capsule-options');
+          if (optionsBtn) {
+            optionsBtn.style.opacity = '1';
+            setTimeout(() => { optionsBtn.style.opacity = ''; }, 3000);
           }
           longPressTimer = null;
         }, 500);
