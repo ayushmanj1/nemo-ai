@@ -327,23 +327,86 @@
         }
 
         @media (max-width: 767px) {
-            .mobile-panel.branding, .mobile-panel.login {
+            .mobile-panel.branding {
                 width: 100% !important;
+                background: #f7f3f0 !important;
             }
+
+            .mobile-panel.login {
+                width: 100% !important;
+                background: #c8f5e1 !important;
+            }
+
             .login-card.expanded {
                 width: 92% !important;
                 max-width: 340px !important;
                 min-height: 480px !important;
                 padding-top: 35px !important;
                 border-radius: 36px !important;
+                background: #f7f3f0 !important;
+                border: none !important;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
             }
             .login-card {
                 width: 300px !important;
                 border-radius: 32px !important;
+                background: #f7f3f0 !important;
+                border: none !important;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
             }
             .login-content {
                 padding-left: 1.5rem !important;
                 padding-right: 1.5rem !important;
+            }
+
+            /* Table and all setup little down */
+            .study-scene-wrapper {
+                transform: translateY(40px) scale(0.9);
+                transform-origin: top center;
+                order: 0;
+            }
+
+            /* Branding text order above the animation */
+            .max-w-\[450px\] {
+                display: flex;
+                flex-direction: column;
+            }
+            #brand-title {
+                order: -2;
+                margin-top: 10px;
+                transform: translateY(-40px);
+            }
+            #brand-desc {
+                order: -1;
+                margin-bottom: 20px;
+                transform: translateY(-40px);
+            }
+            #brand-title.text-show, #brand-desc.text-show {
+                transform: translateY(20px) !important;
+            }
+
+            /* Quote little above */
+            .typing-container {
+                transform: translateY(-25px);
+            }
+
+            /* Smooth transition when light is on */
+            .lamp-light {
+                transition: opacity 1.5s ease-in-out !important;
+            }
+            .kid-silhouette {
+                transition: fill 1.5s ease-in-out, opacity 1.5s ease-in-out !important;
+            }
+            .lamp-head {
+                transition: all 1.5s ease-in-out !important;
+            }
+            .study-scene-wrapper {
+                transition: all 1.5s cubic-bezier(0.65, 0, 0.35, 1) !important;
+            }
+            body.light-on .study-scene-wrapper {
+                transform: translateY(90px) scale(1) !important;
             }
         }
     </style>
@@ -498,6 +561,7 @@
               isLightOn = true;
               scene.classList.remove('scene-dark');
               scene.classList.add('scene-lit');
+              document.body.classList.add('light-on');
               
               setTimeout(() => {
                 title.classList.add('text-show');
@@ -512,26 +576,33 @@
                 ropeContainer.style.top = '-200px';
               }, 1000);
 
-              // Auto-slide on mobile
-              setTimeout(() => {
-                const container = document.getElementById('snap-container');
-                const isMobile = window.innerWidth < 768;
-                if (isMobile) {
-                  container.scrollTo({
-                    left: window.innerWidth,
-                    behavior: 'smooth'
-                  });
-                }
-              }, 2500);
+              // Mobile vs Desktop Animation Timings
+              const container = document.getElementById('snap-container');
+              const isMobile = window.innerWidth < 768;
 
               // Reveal Branding Text
               document.getElementById('brand-title').classList.add('text-show');
               document.getElementById('brand-desc').classList.add('text-show');
 
-              // Trigger Right-side Animation
-              setTimeout(() => {
-                typeQuote();
-              }, 800);
+              if (isMobile) {
+                // Auto-slide on mobile
+                setTimeout(() => {
+                  container.scrollTo({
+                    left: window.innerWidth,
+                    behavior: 'smooth'
+                  });
+                }, 2500);
+
+                // Trigger Right-side Animation AFTER scroll completes
+                setTimeout(() => {
+                  typeQuote();
+                }, 3000);
+              } else {
+                // Desktop: Trigger immediately
+                setTimeout(() => {
+                  typeQuote();
+                }, 800);
+              }
             }
           }, 200);
         }

@@ -1316,7 +1316,7 @@
 
       .hero-subtitle {
         font-size: 0.95rem;
-        margin-bottom: 24px;
+        margin-bottom: 40px;
       }
     }
 
@@ -1928,25 +1928,90 @@
     @media (max-width: 768px) {
       .hero-title {
         font-size: 1.8rem;
+        margin-bottom: 50px !important;
       }
 
-      .input-wrapper {
-        padding: 6px 12px;
-        border-radius: 20px;
-        box-shadow: none !important;
+      .sb-action-btn, #send-btn {
+        width: 34px !important;
+        height: 34px !important;
+        border-radius: 10px !important;
       }
-      .input-main-row {
-        padding: 2px 0 !important;
+      
+      #mic-btn {
+        width: 36px !important;
+        height: 36px !important;
       }
-      .input-bottom-row {
-        margin-top: 6px !important;
+      
+      .sb-action-btn svg, #send-btn svg, #mic-btn svg {
+        width: 16px !important;
+        height: 16px !important;
       }
 
       .input-main-row input {
-        font-size: 1rem;
+        font-size: 0.95rem !important;
+        padding: 0 !important;
+      }
+
+      .control-panel {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 4px 10px calc(4px + env(safe-area-inset-bottom)) !important;
+        background: var(--bg) !important;
+        z-index: 100 !important;
+        transform: none !important;
+        border-top: 1px solid var(--border) !important;
+      }
+
+      #app-shell.private-mode-active .control-panel {
+        background: #1a1a1a !important;
+        border-top: 1px solid rgba(255,255,255,0.08) !important;
+      }
+      
+      [data-theme="dark"] .control-panel {
+        background: #000000 !important;
+        border-top: 1px solid rgba(255,255,255,0.08) !important;
+      }
+
+      .input-wrapper {
+        padding: 0 !important;
+        border-radius: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+      }
+
+      #app-shell.private-mode-active .input-wrapper {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+      }
+
+      .input-top-row {
+        flex: 1;
+        width: auto !important;
+        gap: 8px !important;
+      }
+
+      .input-main-row {
+        padding: 0 !important;
+      }
+
+      #messages, #welcome-hero {
+        padding-bottom: 90px !important;
       }
 
       .input-bottom-row {
+        margin-top: 0 !important;
+        width: auto !important;
         flex-direction: row;
         flex-wrap: nowrap;
         align-items: center;
@@ -1954,24 +2019,12 @@
       }
 
       .chip-group {
-        flex: 1;
-        min-width: 0;
-        overflow-x: auto;
-        padding-bottom: 2px;
-        scrollbar-width: none;
-        -webkit-overflow-scrolling: touch;
-      }
-
-      .chip-group::-webkit-scrollbar {
-        display: none;
+        display: none !important; /* Hide model selector on mobile to fit everything in one flat row */
       }
 
       .action-group {
         flex-shrink: 0;
         justify-content: flex-end;
-      }
-      .control-panel {
-        padding-bottom: 2px !important;
       }
     }
 
@@ -1991,7 +2044,6 @@
       }
 
       .input-wrapper {
-        padding: 8px 10px;
         gap: 4px;
       }
 
@@ -1999,14 +2051,7 @@
         flex-shrink: 0;
       }
 
-      #text-input {
-        padding: 4px 0;
-        font-size: 0.95rem;
-      }
 
-      .control-panel {
-        padding-bottom: 2px !important;
-      }
 
       .attachment-preview {
         padding: 0 8px;
@@ -4540,6 +4585,12 @@
       <div id="attachment-preview" class="attachment-preview"></div>
       <div class="input-wrapper">
         <div class="input-top-row">
+          <button id="attach-btn" class="sb-action-btn" title="Add">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
           <div class="input-main-row">
             <input type="search" id="text-input" placeholder="How can I help you today?" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="search" name="thingai-chat-input" />
           </div>
@@ -4547,12 +4598,6 @@
         
         <div class="input-bottom-row">
           <div class="chip-group">
-            <button id="attach-btn" class="sb-action-btn" title="Add">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-            </button>
             <input type="file" id="file-input" multiple accept=".pdf,.docx,.txt" style="display: none;" />
 
             <div class="mode-selector-wrap">
@@ -6820,52 +6865,18 @@ h1 {
       // ── VisualViewport API — Keyboard Detection ──
       // ── VisualViewport API — Keyboard Detection & Sticking ──
       if (window.visualViewport) {
-        let keyboardOpen = false;
-        const messagesEl = document.getElementById('messages');
-
-        function updateKeyboardPosition() {
-          const vv = window.visualViewport;
-          if (!keyboardOpen || !controlPanel) return;
-
-          // The layout height is what the browser thinks the page height is.
-          // The visualViewport height is what the user actually sees (excluding keyboard).
-          // offsetTop is how much the user has scrolled the visual viewport.
-          // We need to place the fixed bar exactly at the bottom of the visible area.
-          const layoutHeight = window.innerHeight;
-          const visibleBottom = vv.offsetTop + vv.height;
-          const keyboardOffset = layoutHeight - visibleBottom;
-
-          // On some browsers, we need to account for the scroll position
-          // to keep the "fixed" element truly fixed to the visual bottom.
-          controlPanel.style.bottom = `${keyboardOffset}px`;
-        }
-
         function handleViewportResize() {
-          const vv = window.visualViewport;
-          const isKeyboardNowOpen = (window.innerHeight - vv.height) > 100;
-
-          if (isKeyboardNowOpen) {
-            keyboardOpen = true;
-            controlPanel?.classList.add('keyboard-open');
-            updateKeyboardPosition();
-            
-            if (messagesEl) {
-              const inputHeight = controlPanel ? controlPanel.offsetHeight : 80;
-              const keyboardHeight = window.innerHeight - vv.height;
-              messagesEl.style.paddingBottom = `${keyboardHeight + inputHeight}px`;
-            }
-          } else {
-            keyboardOpen = false;
-            if (controlPanel) {
-              controlPanel.classList.remove('keyboard-open');
-              controlPanel.style.bottom = '';
-            }
-            if (messagesEl) messagesEl.style.paddingBottom = '';
+          // Strictly adhere to rule: "On scroll — bar must NOT move. Ever."
+          // Native viewport behavior on mobile (with safe-area-inset) handles docking via pure CSS.
+          const messagesEl = document.getElementById('messages');
+          const cp = document.querySelector('.control-panel');
+          if (messagesEl && cp) {
+             const inputHeight = cp.offsetHeight || 50;
+             // Ensure content has enough padding to not be hidden
+             messagesEl.style.paddingBottom = `${inputHeight + 20}px`;
           }
         }
-
         window.visualViewport.addEventListener('resize', handleViewportResize);
-        window.visualViewport.addEventListener('scroll', updateKeyboardPosition);
       }
 
       // ── Blur input after send to dismiss keyboard ──
