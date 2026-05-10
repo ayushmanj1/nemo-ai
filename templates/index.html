@@ -1316,7 +1316,7 @@
 
       .hero-subtitle {
         font-size: 0.95rem;
-        margin-bottom: 40px;
+        margin-bottom: 24px;
       }
     }
 
@@ -1928,28 +1928,6 @@
     @media (max-width: 768px) {
       .hero-title {
         font-size: 1.8rem;
-        margin-bottom: 50px !important;
-      }
-
-      .sb-action-btn, #send-btn {
-        width: 34px !important;
-        height: 34px !important;
-        border-radius: 10px !important;
-      }
-      
-      #mic-btn {
-        width: 36px !important;
-        height: 36px !important;
-      }
-      
-      .sb-action-btn svg, #send-btn svg, #mic-btn svg {
-        width: 16px !important;
-        height: 16px !important;
-      }
-
-      .input-main-row input {
-        font-size: 0.95rem !important;
-        padding: 0 !important;
       }
 
       .control-panel {
@@ -1959,7 +1937,7 @@
         right: 0 !important;
         width: 100% !important;
         margin: 0 !important;
-        padding: 4px 10px calc(4px + env(safe-area-inset-bottom)) !important;
+        padding: 8px 12px calc(8px + env(safe-area-inset-bottom)) !important;
         background: var(--bg) !important;
         z-index: 100 !important;
         transform: none !important;
@@ -2044,6 +2022,7 @@
       }
 
       .input-wrapper {
+        padding: 8px 10px;
         gap: 4px;
       }
 
@@ -2051,7 +2030,14 @@
         flex-shrink: 0;
       }
 
+      #text-input {
+        padding: 4px 0;
+        font-size: 0.95rem;
+      }
 
+      .control-panel {
+        padding-bottom: 2px !important;
+      }
 
       .attachment-preview {
         padding: 0 8px;
@@ -6871,7 +6857,7 @@ h1 {
           const messagesEl = document.getElementById('messages');
           const cp = document.querySelector('.control-panel');
           if (messagesEl && cp) {
-             const inputHeight = cp.offsetHeight || 50;
+             const inputHeight = cp.offsetHeight || 60;
              // Ensure content has enough padding to not be hidden
              messagesEl.style.paddingBottom = `${inputHeight + 20}px`;
           }
