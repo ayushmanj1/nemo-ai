@@ -66,22 +66,26 @@
        SIDEBAR — Glassmorphism Variables
     ══════════════════════════════════════════ */
     :root {
-      --glass-bg: rgba(255, 255, 255, 0.55);
-      --glass-bg-strong: rgba(255, 255, 255, 0.88);
+      --glass-bg: rgba(247, 243, 240, 0.55);
+      --glass-bg-strong: rgba(247, 243, 240, 0.88);
       --glass-border: rgba(0, 0, 0, 0.08);
       --text-primary: #0d0d0d;
       --text-muted: #6e6e80;
       --capsule-bg: rgba(0, 0, 0, 0.05);
-      --input-bg: #ffffff;
+      --input-bg: #f7f3f0;
       --shadow: rgba(0, 0, 0, 0.10);
       --sb-accent: #06b6d4;
       --sidebar-width-expanded: 260px;
       --sidebar-width-collapsed: 64px;
       --hover-bg: rgba(0, 0, 0, 0.05);
       --hover-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      --code-bg: #fdf6e3;
-      --code-text: #111827;
+      --code-bg: #ede4d9;
+      --code-text: #4a3728;
       --code-header-bg: rgba(0, 0, 0, 0.04);
+      --editor-bg: #fcfaf5;
+      --editor-header-bg: #4a3728;
+      --editor-tabs-bg: #ede4d9;
+      --editor-tab-text: #4a3728;
     }
 
     [data-theme="dark"] {
@@ -100,6 +104,10 @@
       --code-bg: #000000;
       --code-text: #d1d5db;
       --code-header-bg: rgba(255, 255, 255, 0.05);
+      --editor-bg: #0a0a0a;
+      --editor-header-bg: #1a1a1a;
+      --editor-tabs-bg: #252525;
+      --editor-tab-text: #ececec;
     }
 
     /* ══════════════════════════════════════════
@@ -118,7 +126,7 @@
       flex-shrink: 0;
       width: var(--sidebar-width-expanded);
       height: 100vh;
-      background: #ffffff;
+      background: #ede4d9;
       border-right: none;
       display: flex;
       flex-direction: column;
@@ -162,7 +170,7 @@
     }
 
     #chat-sidebar .sb-glass-card {
-      background: #ffffff !important;
+      background: #f7f3f0 !important;
       border: 1px solid #e2e8f0 !important;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important;
     }
@@ -170,9 +178,10 @@
     #chat-sidebar .sb-ctrl-btn:hover,
     #chat-sidebar .sb-profile-row:hover,
     #chat-sidebar .sb-capsule:hover {
-      background: #e2e8f0 !important;
-      transform: scale(1.03);
+      background: #dbd3c9 !important;
+      transform: scale(1.02);
       z-index: 10;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.04);
     }
     
     #chat-sidebar .sb-capsule {
@@ -578,7 +587,7 @@
     .sb-search-overlay {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       border-radius: 18px;
-      background: #ffffff !important;
+      background: #f7f3f0 !important;
       box-shadow: 0 16px 48px rgba(0,0,0,0.12);
       z-index: 100; overflow: hidden; padding: 16px 12px;
       display: flex; flex-direction: column;
@@ -769,14 +778,14 @@
     }
 
     [data-theme="light"] {
-      --bg: #ffffff;
-      --surface: #f2f2f3;
-      --surface2: #f4f4f5;
-      --border: rgba(0, 0, 0, 0.1);
+      --bg: #f7f3f0;
+      --surface: #efedea;
+      --surface2: #f2f0ed;
+      --border: rgba(0, 0, 0, 0.08);
       --text: #171717;
       --muted: #737373;
-      --you-bg: #f4f4f5;
-      --ai-bg: #ffffff;
+      --you-bg: #f2f0ed;
+      --ai-bg: #f7f3f0;
       --glow: rgba(6, 182, 212, 0.3);
     }
 
@@ -1198,13 +1207,13 @@
 
     .suggestion-card {
       font-family: 'Syne', sans-serif;
-      background: #ffffff;
-      border: 1px solid var(--glass-border);
+      background: #ede4d9;
+      border: 1px solid #dcd4cb;
       padding: 16px 20px;
       border-radius: 16px;
       font-size: 0.9rem;
       font-weight: 500;
-      color: #171717;
+      color: #4a3728;
       cursor: pointer;
       text-align: left;
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1213,7 +1222,7 @@
       gap: 4px;
       position: relative;
       overflow: hidden;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
       min-width: 0;
       word-wrap: break-word;
     }
@@ -1271,14 +1280,14 @@
     }
 
     .suggestion-card:hover {
-      background: #f8f9fa;
-      border-color: var(--sb-accent);
+      background: #e5d9cc;
+      border-color: #dbd3c9;
       transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
     }
 
     .suggestion-action {
-      color: var(--accent);
+      color: var(--sb-accent);
       font-size: 0.75rem;
       font-weight: 700;
       text-transform: uppercase;
@@ -3399,7 +3408,7 @@
       height: 100%;
       border-right: 1px solid var(--border);
       min-width: 0;
-      background: var(--bg);
+      background: var(--editor-bg);
       overflow: hidden;
       transition: flex 0.4s cubic-bezier(0.25, 1, 0.5, 1), width 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease;
     }
@@ -3518,7 +3527,7 @@
     /* Multi-file Tab Bar */
     .editor-tabs {
       display: flex;
-      background: var(--surface2);
+      background: var(--editor-tabs-bg);
       border-bottom: 1px solid var(--border);
       height: 35px;
       overflow-x: auto;
@@ -3534,22 +3543,22 @@
       gap: 8px;
       padding: 0 12px;
       height: 35px;
-      background: var(--surface);
+      background: var(--editor-tabs-bg);
       border: none;
       font-size: 13px;
-      color: var(--muted);
+      color: var(--editor-tab-text);
       cursor: pointer;
       position: relative;
       transition: background 0.2s, color 0.2s;
     }
     .editor-tab:hover {
-      background: #323233;
-      color: #cccccc;
+      background: #f7f3f0;
+      color: #171717;
     }
     .editor-tab.active {
-      background: var(--bg);
-      color: var(--text);
-      font-weight: 400;
+      background: #fcfaf5;
+      color: #4a3728;
+      font-weight: 500;
     }
     .editor-tab.active::before {
       content: '';
@@ -3621,11 +3630,11 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+      background: var(--editor-header-bg);
       font-family: 'DM Sans', sans-serif;
       font-size: 12px;
-      color: var(--muted);
+      color: var(--editor-tab-text);
       flex-shrink: 0;
     }
     .breadcrumb-item {
@@ -3645,7 +3654,7 @@
       align-items: center;
       justify-content: center;
       border-radius: 4px;
-      color: var(--muted);
+      color: var(--editor-tab-text);
       cursor: pointer;
       transition: background 0.2s;
     }
@@ -3680,7 +3689,7 @@
       width: 100%;
       height: 100%;
       border: none;
-      background: var(--bg);
+      background: var(--editor-bg);
     }
 
     /* ══════════════════════════════════════════════════════════════
@@ -4084,6 +4093,50 @@
         opacity: 0.6;
       }
     }
+    /* ── Pull Cord (Theme Toggle) ── */
+    #pull-cord-wrap {
+      position: absolute;
+      top: 0;
+      right: 10px;
+      height: 100px;
+      width: 20px;
+      cursor: pointer;
+      z-index: 1001;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: transform 0.2s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+    }
+    #pull-cord-wrap:active {
+      transform: translateY(25px);
+    }
+    .rope {
+      width: 2px;
+      height: 60px;
+      background: #8b5e3c;
+      box-shadow: 1px 0 2px rgba(0,0,0,0.1);
+    }
+    .knot {
+      width: 14px;
+      height: 14px;
+      background: #4a3728;
+      border-radius: 50%;
+      margin-top: -2px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      position: relative;
+    }
+    .knot::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 4px; height: 4px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+    }
+    @media (max-width: 768px) {
+      #pull-cord-wrap { right: 15px; }
+    }
 
   </style>
 </head>
@@ -4136,6 +4189,16 @@
         <button class="sb-ctrl-btn" id="sb-settings-icon" title="Settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
           <span class="sb-ctrl-label sb-text-fade">Settings</span>
+        </button>
+        <button class="sb-ctrl-btn" id="sb-plans-icon" title="View Plans">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 12 20 22 4 22 4 12"></polyline>
+            <rect x="2" y="7" width="20" height="5"></rect>
+            <line x1="12" y1="22" x2="12" y2="7"></line>
+            <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
+            <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+          </svg>
+          <span class="sb-ctrl-label sb-text-fade">Plans</span>
         </button>
       </div>
 
@@ -4410,22 +4473,18 @@
       </button>
 
       <div class="header-actions">
-        <button class="icon-btn" id="plans-btn" title="View Plans">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 12 20 22 4 22 4 12"></polyline>
-            <rect x="2" y="7" width="20" height="5"></rect>
-            <line x1="12" y1="22" x2="12" y2="7"></line>
-            <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
-            <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
-          </svg>
-          <span class="plans-text">plans</span>
-        </button>
 
-        <button class="icon-btn" id="privacy-toggle-btn" title="Private Mode">
+        <button class="icon-btn" id="privacy-toggle-btn" title="Private Mode" style="margin-right: 15px;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 2">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
           </svg>
         </button>
+
+        <!-- Pull Cord Theme Toggle -->
+        <div id="pull-cord-wrap" title="Pull to toggle theme">
+          <div class="rope"></div>
+          <div class="knot"></div>
+        </div>
 
         <button class="icon-btn" id="clear-btn" title="Clear Chat (Privacy Mode)" style="display: none;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
@@ -5347,12 +5406,13 @@
         let headers = {};
 
         if (files.length > 0) {
+          body = new FormData();
           body.append('text', text);
           files.forEach(f => body.append('files', f));
+          // Browser will set correct multipart/form-data header
         } else {
-          body = JSON.stringify({
-            text: text
-          });
+          headers['Content-Type'] = 'application/json';
+          body = JSON.stringify({ text: text });
         }
 
         const response = await fetch('/speak', {
@@ -5926,7 +5986,57 @@
       const appDiv = document.getElementById('app');
       const sbToggleBtn = document.getElementById('sb-toggle-btn');
       const sbNewChatIcon = document.getElementById('sb-new-chat-icon');
+      // ── Pull Cord Theme Toggle Logic ──
+      const pullCord = document.getElementById('pull-cord-wrap');
+      function playClickSound() {
+        try {
+          const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const oscillator = audioCtx.createOscillator();
+          const gainNode = audioCtx.createGain();
+          
+          oscillator.type = 'triangle';
+          oscillator.frequency.setValueAtTime(150, audioCtx.currentTime);
+          oscillator.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.15);
+          
+          gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+          
+          oscillator.connect(gainNode);
+          gainNode.connect(audioCtx.destination);
+          
+          oscillator.start();
+          oscillator.stop(audioCtx.currentTime + 0.15);
+        } catch(e) {}
+      }
+
+      if (pullCord) {
+        pullCord.addEventListener('mousedown', () => {
+          playClickSound();
+          const current = document.documentElement.getAttribute('data-theme');
+          const next = current === 'dark' ? 'light' : 'dark';
+          document.documentElement.setAttribute('data-theme', next);
+          localStorage.setItem('theme', next);
+          
+          // Update theme color meta
+          document.querySelector('meta[name="theme-color"]')?.setAttribute('content', next === 'dark' ? '#050505' : '#ffffff');
+
+          // Sync Monaco Editor theme
+          if (window.monacoEditor) {
+            monaco.editor.setTheme(next === 'dark' ? 'vs-dark' : 'thing-beige');
+          }
+        });
+      }
+
       const sbSearchIcon = document.getElementById('sb-search-icon');
+      const sbPlansIcon = document.getElementById('sb-plans-icon');
+      if (sbPlansIcon) {
+        sbPlansIcon.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const pricingModal = document.getElementById('pricing-modal');
+          if (pricingModal) pricingModal.classList.add('active');
+        });
+      }
+
       const sbSettingsIcon = document.getElementById('sb-settings-icon');
       const sbProfileBtn = document.getElementById('sb-profile-btn');
       const privacyToggleBtn = document.getElementById('privacy-toggle-btn');
@@ -6310,13 +6420,28 @@ h1 {
                 script.onload = () => {
                   require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
                   require(['vs/editor/editor.main'], function() {
-                    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'vs-dark' : 'vs-light';
+                    monaco.editor.defineTheme('thing-beige', {
+                      base: 'vs',
+                      inherit: true,
+                      rules: [
+                        { token: 'comment', foreground: '8b5e3c', fontStyle: 'italic' },
+                        { token: 'keyword', foreground: '4a3728', fontStyle: 'bold' }
+                      ],
+                      colors: {
+                        'editor.background': '#fcfaf5',
+                        'editor.lineHighlightBackground': '#f8f6f0',
+                        'editorLineNumber.foreground': '#8b5e3c',
+                        'editor.selectionBackground': '#f3eee0',
+                        'editorCursor.foreground': '#4a3728'
+                      }
+                    });
+                    
                     window.editorFiles.forEach(f => {
                       f.model = monaco.editor.createModel(f.content, f.language);
                     });
                     window.monacoEditor = monaco.editor.create(document.getElementById('monaco-container'), {
                       model: window.editorFiles.find(f => f.id === window.activeFileId).model,
-                      theme: theme,
+                      theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'vs-dark' : 'thing-beige',
                       automaticLayout: true,
                       minimap: { enabled: true },
                       inlineSuggest: { enabled: true },
