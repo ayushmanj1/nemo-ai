@@ -2,12 +2,6 @@
 
 Thing AI is a premium, high-performance AI ecosystem designed for seamless real-time interaction, advanced web intelligence, and professional content orchestration. It combines a state-of-the-art "Cinema Gloss" interface with a multi-layered backend architecture to deliver lightning-fast, context-aware responses.
 
-![Thing AI Banner](https://img.shields.io/badge/Thing_AI-Premium_Interface-06b6d4?style=for-the-badge)
-![Tech Stack](https://img.shields.io/badge/Python-3.10+-3776ab?style=for-the-badge&logo=python&logoColor=white)
-![Backend](https://img.shields.io/badge/Flask-Orchestrator-000000?style=for-the-badge&logo=flask&logoColor=white)
-![Frontend](https://img.shields.io/badge/Vanilla_JS-High_Energy-f7df1e?style=for-the-badge&logo=javascript&logoColor=black)
-
----
 
 ## ✨ Highlighting Features
 

@@ -6,6 +6,7 @@ Run with:  python WebMain.py
 Then open: http://localhost:8000
 """
 
+# pyrefly: ignore [missing-import]
 from flask import Flask, request, jsonify, render_template, send_from_directory, session, Response, stream_with_context
 from dotenv import load_dotenv
 import threading
@@ -88,6 +89,11 @@ def index():
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '0'
     return response
+
+@app.route("/login")
+def login():
+    clerk_pub_key = os.getenv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "")
+    return render_template("login.html", clerk_pub_key=clerk_pub_key)
 
 @app.route("/clear", methods=["POST"])
 def clear_chat():

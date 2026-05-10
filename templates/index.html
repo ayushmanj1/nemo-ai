@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Thing AI</title>
   <link
     href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap"
@@ -38,10 +38,27 @@
       document.documentElement.setAttribute('data-theme', 'light');
       document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#ffffff');
     } else {
-      // Dark is default — explicitly set for dark mode sidebar
       document.documentElement.setAttribute('data-theme', 'dark');
       document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#050505');
     }
+  </script>
+
+  <!-- Clerk Auth Integration -->
+  <script
+    async
+    crossorigin="anonymous"
+    data-clerk-publishable-key="pk_test_YWxlcnQtbmFyd2hhbC04OC5jbGVyay5hY2NvdW50cy5kZXYk"
+    src="https://js.clerk.com/v4"
+    type="text/javascript"
+  ></script>
+  <script>
+    window.addEventListener('load', async function () {
+      await Clerk.load();
+      const isSkipped = localStorage.getItem('skipLogin') === 'true';
+      if (!Clerk.user && !isSkipped) {
+        window.location.href = "/login";
+      }
+    });
   </script>
 
   <style>
@@ -165,10 +182,8 @@
     }
     
     #chat-sidebar .sb-capsule.active {
-      background: rgba(0, 0, 0, 0.04) !important;
+      background: transparent !important;
       border: none !important;
-      border-left: 3px solid #d1d5db !important;
-      border-radius: 4px !important;
       box-shadow: none !important;
     }
 
@@ -210,10 +225,8 @@
     }
 
     [data-theme="dark"] #chat-sidebar .sb-capsule.active {
-      background: rgba(255, 255, 255, 0.05) !important;
+      background: transparent !important;
       border: none !important;
-      border-left: 3px solid rgba(255, 255, 255, 0.2) !important;
-      border-radius: 4px !important;
       box-shadow: none !important;
     }
 
@@ -499,8 +512,8 @@
     }
     .sb-capsule:active { transform: scale(0.99); }
     .sb-capsule.active {
-      border-left: 3px solid var(--sb-accent);
-      background: var(--hover-bg);
+      border-left: none;
+      background: transparent;
       font-weight: 500;
     }
 
@@ -677,45 +690,40 @@
     /* ── Mobile hamburger (only on mobile) ── */
     #sb-mobile-trigger {
       display: none;
-      width: 36px;
-      height: 36px;
-      border-radius: 9px;
-      border: 1px solid var(--border);
-      background: var(--surface);
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      border: none;
+      background: transparent;
       color: var(--muted);
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.18s;
+      transition: all 0.2s ease;
       flex-shrink: 0;
+      touch-action: manipulation;
+      position: relative;
+      overflow: hidden;
     }
 
-    #sb-mobile-trigger:hover {
+    #sb-mobile-trigger:hover,
+    #sb-mobile-trigger:active {
       background: var(--hover-bg);
       color: var(--text);
     }
 
-    #sb-mobile-trigger svg {
-      width: 18px;
-      height: 18px;
+    #sb-mobile-trigger:active {
+      transform: scale(0.92);
+      transition: transform 0.08s ease;
     }
 
-    /* ── Responsive ── */
-    @media (max-width: 768px) {
-      #chat-sidebar {
-        position: fixed;
-        left: 0;
-        top: 0;
-        height: 100vh;
-        z-index: 200;
-        transform: translateX(-100%);
-        transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-        width: 280px !important; /* always full on mobile */
-      }
+    #sb-mobile-trigger svg {
+      width: 20px;
+      height: 20px;
+    }
 
-      #chat-sidebar.mobile-open {
-        transform: translateX(0);
-      }
+    @media (max-width: 768px) {
+      /* Sidebar rules moved to bottom of file */
 
       #sb-mobile-trigger {
         display: flex;
@@ -807,6 +815,12 @@
       justify-content: flex-end;
       padding: 18px 0;
       flex-shrink: 0;
+    }
+
+    @media (max-width: 1024px) {
+      header {
+        justify-content: space-between;
+      }
     }
 
     .logo {
@@ -1502,11 +1516,13 @@
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4) !important;
     }
 
-    #app-shell.private-mode-active .input-wrapper input[type="text"] {
+    #app-shell.private-mode-active .input-wrapper input[type="text"],
+    #app-shell.private-mode-active .input-wrapper input[type="search"] {
       color: #ffffff !important;
     }
 
-    #app-shell.private-mode-active .input-wrapper input[type="text"]::placeholder {
+    #app-shell.private-mode-active .input-wrapper input[type="text"]::placeholder,
+    #app-shell.private-mode-active .input-wrapper input[type="search"]::placeholder {
       color: rgba(255, 255, 255, 0.5) !important;
     }
 
@@ -1618,7 +1634,8 @@
       padding: 8px 0;
     }
 
-    input[type="text"] {
+    input[type="text"],
+    input[type="search"] {
       width: 100%;
       padding: 10px 0;
       border: none !important;
@@ -1632,7 +1649,8 @@
       letter-spacing: -0.01em;
     }
 
-    input[type="text"]::placeholder {
+    input[type="text"]::placeholder,
+    input[type="search"]::placeholder {
       color: var(--text-muted);
       opacity: 0.6;
     }
@@ -2292,6 +2310,131 @@
       }
     }
 
+    /* ── Professional Notifications (Toast) ── */
+    #toast-container {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 12px 24px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      pointer-events: auto;
+      animation: toastSlideIn 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+      transition: all 0.3s ease;
+    }
+
+    @keyframes toastSlideIn {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .toast.closing {
+      transform: translateY(-20px);
+      opacity: 0;
+    }
+
+    .toast.success { border-color: var(--accent); color: var(--accent); }
+    .toast.error { border-color: var(--red); color: var(--red); }
+
+    /* ── Custom Confirm Modal ── */
+    #custom-confirm-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 10001;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    #custom-confirm-modal.active { display: flex; }
+
+    .confirm-container {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 400px;
+      padding: 32px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes modalPop {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .confirm-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .confirm-msg {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-bottom: 28px;
+    }
+
+    .confirm-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .confirm-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 12px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .confirm-btn.cancel {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .confirm-btn.confirm {
+      background: var(--accent);
+      border: none;
+      color: #000;
+    }
+
+    .confirm-btn.confirm.danger {
+      background: var(--red);
+      color: #fff;
+    }
+
+    .confirm-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
     /* ── Settings Modal ── */
     #settings-modal {
       position: fixed;
@@ -2525,23 +2668,7 @@
         padding: 0 16px;
       }
 
-      #chat-sidebar {
-        position: fixed;
-        left: 0; top: 0;
-        height: 100vh; height: 100dvh;
-        z-index: 200;
-        transform: translateX(-100%);
-        transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
-        width: 320px !important;
-        box-shadow: 8px 0 40px rgba(0,0,0,0.15);
-      }
-      [data-theme="dark"] #chat-sidebar {
-        box-shadow: 8px 0 40px rgba(0,0,0,0.5);
-      }
-      #chat-sidebar.mobile-open {
-        transform: translateX(0);
-      }
-
+      /* Sidebar rules moved to bottom of file */
       #sb-mobile-trigger {
         display: flex;
       }
@@ -2601,34 +2728,7 @@
         height: 100dvh; /* iOS safe area */
       }
 
-      /* --- Sidebar mobile drawer --- */
-      #chat-sidebar {
-        position: fixed;
-        left: 0; top: 0;
-        height: 100vh; height: 100dvh;
-        z-index: 200;
-        transform: translateX(-100%);
-        transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
-        width: 82vw !important;
-        max-width: 320px;
-        box-shadow: 8px 0 40px rgba(0,0,0,0.2);
-      }
-      [data-theme="dark"] #chat-sidebar {
-        box-shadow: 8px 0 40px rgba(0,0,0,0.6);
-      }
-      #chat-sidebar.mobile-open {
-        transform: translateX(0);
-      }
-      #chat-sidebar.collapsed {
-        width: 82vw !important;
-        max-width: 320px;
-      }
-      #chat-sidebar.collapsed .sb-text-fade {
-        opacity: 1;
-        transform: translateX(0);
-        max-width: 200px;
-        pointer-events: auto;
-      }
+      /* --- Sidebar mobile drawer rules moved to bottom of file --- */
       #chat-sidebar.collapsed .sb-ctrl-btn {
         width: 100%;
         padding: 0 14px;
@@ -2692,8 +2792,8 @@
       /* --- Mobile hamburger --- */
       #sb-mobile-trigger {
         display: flex;
-        width: 40px;
-        height: 40px;
+        width: 44px;
+        height: 44px;
         border-radius: 12px;
       }
 
@@ -2845,7 +2945,8 @@
         padding: 4px 0;
       }
 
-      input[type="text"] {
+      input[type="text"],
+      input[type="search"] {
         font-size: 0.95rem;
         padding: 6px 0;
       }
@@ -3085,7 +3186,8 @@
         border-radius: 20px;
       }
 
-      input[type="text"] {
+      input[type="text"],
+      input[type="search"] {
         font-size: 0.9rem;
       }
 
@@ -3580,6 +3682,409 @@
       border: none;
       background: var(--bg);
     }
+
+    /* ══════════════════════════════════════════════════════════════
+       STRICT MOBILE RESPONSIVENESS — GLOBAL RULES
+    ══════════════════════════════════════════════════════════════ */
+
+    /* ── Search input type=search appearance reset ── */
+    input[type="search"] {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+    }
+    input[type="search"]::-webkit-search-decoration,
+    input[type="search"]::-webkit-search-cancel-button,
+    input[type="search"]::-webkit-search-results-button,
+    input[type="search"]::-webkit-search-results-decoration {
+      -webkit-appearance: none;
+      display: none;
+    }
+
+    /* ── Touch-action: manipulation on all interactive elements ── */
+    button, a, [role="button"],
+    .sb-ctrl-btn, .sb-capsule, .sb-toggle-btn,
+    .suggestion-card, .icon-btn, .input-chip,
+    .setting-btn, .plan-btn, .model-option,
+    .mode-option, .color-dot, .settings-tab,
+    .editor-tab, .editor-action-icon, .add-file-btn,
+    .msg-action-btn, .copy-btn, .sb-action-btn,
+    .sb-capsule-delete, .remove-file, .file-chip,
+    #send-btn, #mic-btn, #attach-btn,
+    .sb-profile-row, .pricing-close, .settings-close {
+      touch-action: manipulation;
+    }
+
+    /* ── GPU-accelerated animations only (transform + opacity) ── */
+    .sb-ctrl-btn, .sb-capsule, .suggestion-card,
+    .icon-btn, .input-chip, #send-btn, #mic-btn,
+    .plan-btn, .pricing-card, .settings-container,
+    .pricing-container, .sb-search-overlay, #chat-sidebar,
+    #sb-overlay, .msg-row, .sb-toggle-btn, .sb-profile-row {
+      will-change: transform;
+    }
+
+    /* ── Reduced motion for accessibility ── */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    /* ── Momentum scrolling on all scroll containers ── */
+    #messages, .sb-recents-list, .sb-search-results,
+    .settings-content, .pricing-container, .chip-group {
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* ── Minimum touch target sizes (44×44 Apple HIG) ── */
+    .sb-capsule-delete {
+      min-width: 44px;
+      min-height: 44px;
+    }
+    .color-dot {
+      min-width: 44px;
+      min-height: 44px;
+    }
+    .copy-btn {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    .msg-action-btn {
+      min-width: 44px;
+      min-height: 44px;
+    }
+
+    /* ── Hover → also :focus and :active for mobile ── */
+    .suggestion-card:focus, .suggestion-card:active {
+      background: #f8f9fa;
+      border-color: var(--sb-accent);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    }
+    [data-theme="dark"] .suggestion-card:focus,
+    [data-theme="dark"] .suggestion-card:active {
+      background: #222;
+      border-color: var(--sb-accent);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+    .sb-ctrl-btn:focus, .sb-ctrl-btn:active {
+      background: var(--hover-bg);
+    }
+    .icon-btn:focus, .icon-btn:active {
+      background: var(--hover-bg);
+      color: var(--text);
+    }
+    .input-chip:focus, .input-chip:active {
+      background: var(--hover-bg);
+      border-color: var(--sb-accent);
+    }
+    #send-btn:focus, #send-btn:active {
+      background: var(--sb-accent);
+      color: #fff;
+      border-color: var(--sb-accent);
+    }
+
+    /* ── Mobile & Tablet sidebar overlay backdrop ── */
+    @media (max-width: 1024px) {
+      #sb-overlay {
+        display: none !important; /* Removed to match laptop UI */
+      }
+    }
+
+    /* ── Mobile & Tablet sidebar drawer improvements ── */
+    @media (max-width: 1024px) {
+      #chat-sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        z-index: 200;
+        width: min(75vw, 220px) !important;
+        max-width: 220px;
+        height: 100dvh;
+        box-shadow: none !important;
+        border-right: none !important;
+        transform: translateX(-100%);
+        transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      [data-theme="dark"] #chat-sidebar {
+        border-right: none !important;
+        box-shadow: none !important;
+      }
+      #chat-sidebar.mobile-open {
+        transform: translateX(0);
+      }
+      /* Force GPU compositing for iOS Safari */
+      #chat-sidebar {
+        transform: translateX(-100%) translateZ(0);
+        -webkit-transform: translateX(-100%) translateZ(0);
+      }
+      #chat-sidebar.mobile-open {
+        transform: translateX(0) translateZ(0);
+        -webkit-transform: translateX(0) translateZ(0);
+      }
+      /* When sidebar open, prevent main content scroll */
+      body.sidebar-open {
+        overflow: hidden !important;
+      }
+      /* Sidebar must be independently scrollable */
+      #chat-sidebar {
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+      .sb-recents-list {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      /* Force show labels and proper button alignment in mobile drawer */
+      #chat-sidebar.mobile-open .sb-text-fade {
+        opacity: 1 !important;
+        transform: translateX(0) !important;
+        max-width: 200px !important;
+        pointer-events: auto !important;
+      }
+      #chat-sidebar.mobile-open .sb-ctrl-btn {
+        width: 100% !important;
+        padding: 0 14px !important;
+        justify-content: flex-start !important;
+        gap: 12px !important;
+        height: 48px !important;
+      }
+      #chat-sidebar.mobile-open .sb-profile-row {
+        justify-content: flex-start !important;
+        padding: 4px 8px !important;
+        gap: 12px !important;
+      }
+      #chat-sidebar.mobile-open .sb-profile-info,
+      #chat-sidebar.mobile-open .sb-profile-chevron {
+        display: block !important;
+      }
+      #chat-sidebar.mobile-open .sb-logo-group {
+        gap: 12px !important;
+        justify-content: flex-start !important;
+      }
+    }
+
+    /* ── Settings as bottom sheet on mobile ── */
+    @media (max-width: 600px) {
+      #settings-modal {
+        align-items: flex-end !important;
+        justify-content: flex-end !important;
+        padding: 0 !important;
+      }
+      .settings-container {
+        max-width: 100% !important;
+        width: 100% !important;
+        height: auto !important;
+        max-height: 90dvh !important;
+        min-height: 40dvh;
+        border-radius: 20px 20px 0 0 !important;
+        flex-direction: column !important;
+        transform: translateY(100%) !important;
+        transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1) !important;
+      }
+      #settings-modal.active .settings-container {
+        transform: translateY(0) !important;
+      }
+      /* Drag handle pill */
+      .settings-container::before {
+        content: '';
+        display: block;
+        width: 40px;
+        height: 4px;
+        background: var(--muted);
+        border-radius: 2px;
+        margin: 12px auto 8px;
+        opacity: 0.5;
+        flex-shrink: 0;
+      }
+      .settings-sidebar {
+        width: 100% !important;
+        flex-direction: row !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        scrollbar-width: none !important;
+        border-right: none !important;
+        border-bottom: 1px solid var(--border) !important;
+        padding: 8px 12px !important;
+        gap: 4px !important;
+        flex-shrink: 0;
+      }
+      .settings-sidebar::-webkit-scrollbar { display: none; }
+      .settings-tab {
+        min-width: 44px;
+        min-height: 44px;
+        padding: 8px 12px !important;
+        font-size: 0 !important;
+        flex-shrink: 0;
+        justify-content: center;
+      }
+      .settings-tab svg {
+        width: 20px;
+        height: 20px;
+        margin: 0 !important;
+      }
+      .settings-content {
+        flex: 1;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        padding: 20px 16px !important;
+      }
+      .setting-item {
+        min-height: 44px;
+      }
+      /* Form fields min 16px to prevent iOS zoom */
+      .settings-content input,
+      .settings-content select,
+      .settings-content textarea {
+        min-height: 44px;
+        font-size: 16px !important;
+      }
+    }
+
+    /* ── Pricing modal fullscreen on mobile ── */
+    @media (max-width: 600px) {
+      #pricing-modal {
+        padding: 0 !important;
+      }
+      .pricing-container {
+        max-width: 100% !important;
+        width: 100% !important;
+        max-height: 100dvh !important;
+        height: 100dvh !important;
+        border-radius: 0 !important;
+        transform: translateY(100%) !important;
+        transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1) !important;
+      }
+      #pricing-modal.active .pricing-container {
+        transform: translateY(0) !important;
+      }
+    }
+
+    /* ── Model/Mode dropdowns on mobile — proper touch sizing ── */
+    @media (max-width: 600px) {
+      .model-option, .mode-option {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        padding: 12px 14px;
+      }
+    }
+
+    /* ── Input font size must be >= 16px on mobile (prevent iOS zoom) ── */
+    @media (max-width: 768px) {
+      input[type="text"],
+      input[type="search"],
+      textarea,
+      select {
+        font-size: 16px !important;
+      }
+    }
+
+    /* ── Keyboard open state for control panel ── */
+    .control-panel.keyboard-open {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 8px 12px calc(8px + env(safe-area-inset-bottom)) !important;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      transition: height 0.2s ease;
+    }
+
+    /* ── App height transition for keyboard & sidebar push ── */
+    #app {
+      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), height 0.2s ease, flex 0.4s cubic-bezier(0.25, 1, 0.5, 1), width 0.4s cubic-bezier(0.25, 1, 0.5, 1), margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    @media (max-width: 1024px) {
+      /* Smooth transitions for all elements affected by sidebar toggle */
+      #app, .hero-title, .hero-subtitle, .suggestions, .control-panel, .input-wrapper {
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      body.sidebar-open #app {
+        transform: translateX(min(75vw, 220px));
+        width: calc(100vw - min(75vw, 220px)) !important;
+        flex: none; /* Prevent flex stretching issues when width changes */
+      }
+      
+      /* Little mode for Thing AI quote when sidebar is open */
+      body.sidebar-open .hero-title {
+        font-size: 1.5rem !important;
+        margin-bottom: 8px !important;
+        letter-spacing: -0.01em !important;
+      }
+      body.sidebar-open .hero-subtitle {
+        font-size: 0.9rem !important;
+        opacity: 0.8;
+      }
+
+      /* Line by line suggestion cards when sidebar is open */
+      body.sidebar-open .suggestions {
+        grid-template-columns: 1fr !important;
+        max-width: 280px !important;
+        gap: 8px !important;
+      }
+      body.sidebar-open .suggestion-card {
+        padding: 8px 12px !important;
+      }
+      
+      /* Compact search bar when sidebar is open */
+      body.sidebar-open .control-panel {
+        padding: 8px 12px !important;
+      }
+      body.sidebar-open .input-wrapper {
+        padding: 4px 10px !important;
+        border-radius: 16px !important;
+      }
+      body.sidebar-open .input-main-row {
+        gap: 6px !important;
+      }
+
+      /* Hide the main header toggle when sidebar is open so the one next to Thing AI takes over */
+      body.sidebar-open #sb-mobile-trigger {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.2s ease, visibility 0.2s;
+      }
+      
+      /* Make search bar thinner */
+      .input-wrapper {
+        padding: 6px 12px;
+        border-radius: 20px;
+      }
+      .input-main-row {
+        padding: 0;
+      }
+      input[type="text"],
+      input[type="search"] {
+        padding: 4px 0;
+      }
+      
+      /* Hide normal chat toggle and plans button on mobile */
+      .mode-selector-wrap, #plans-btn {
+        display: none !important;
+      }
+    }
+
+    /* ── Mobile msg-actions always visible (no hover on mobile) ── */
+    @media (max-width: 768px) {
+      .msg-actions {
+        opacity: 1 !important;
+      }
+      /* Capsule delete always visible on mobile */
+      .sb-capsule .sb-capsule-delete {
+        opacity: 0.6;
+      }
+    }
+
   </style>
 </head>
 
@@ -3616,7 +4121,7 @@
         </button>
         <button class="sb-ctrl-btn" id="sb-search-icon" title="Search Chats">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <span class="sb-ctrl-label sb-text-fade">Search</span>
+          <span class="sb-ctrl-label sb-text-fade">Search Chat</span>
         </button>
         <button class="sb-ctrl-btn" id="sb-code-editor-icon" title="Code Editor">
           <div style="position: relative; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
@@ -3664,7 +4169,7 @@
         <button id="sb-search-back-btn" class="sb-search-back-btn" title="Back" style="position: absolute; left: 6px; top: 50%; transform: translateY(-50%); z-index: 2; width: 32px; height: 32px;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
         </button>
-        <input type="text" id="sb-search-input" placeholder="Search chats..." autocomplete="off" style="padding-left: 44px; padding-right: 36px;" />
+        <input type="search" id="sb-search-input" placeholder="Search chats..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="search" style="padding-left: 44px; padding-right: 36px;" />
         <button class="sb-search-clear" id="sb-search-clear" style="right: 8px; z-index: 2;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
@@ -3673,19 +4178,20 @@
     </div>
   </aside>
 
-  <div id="auth-guard" style="display: none;">
-    <div class="guard-content">
-      <div class="logo-icon" style="width: 60px; height: 60px; font-size: 30px; margin: 0 auto 24px;">✦</div>
-      <h1 class="guard-title">Unlock Thing AI</h1>
-      <p class="guard-desc">Sign up or login to explore the power of Thing AI. Get instant answers, generate stunning
-        art, and much more.</p>
-      <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-        <button id="guard-sign-up-btn">Sign Up to Use</button>
-        <button id="guard-sign-in-btn">Sign In</button>
-        <button id="guard-guest-btn">Stay logged out and use</button>
+  <!-- Custom Notification & Confirm Systems -->
+  <div id="toast-container"></div>
+  
+  <div id="custom-confirm-modal">
+    <div class="confirm-container">
+      <div class="confirm-title" id="confirm-title">Are you sure?</div>
+      <div class="confirm-msg" id="confirm-msg">This action cannot be undone.</div>
+      <div class="confirm-actions">
+        <button class="confirm-btn cancel" id="confirm-cancel">Cancel</button>
+        <button class="confirm-btn confirm" id="confirm-ok">Yes, proceed</button>
       </div>
     </div>
   </div>
+
 
   <!-- Settings Modal -->
   <div id="settings-modal">
@@ -3774,7 +4280,7 @@
           </div>
           <div id="settings-account-guest" style="display: none; text-align: center; padding: 40px 20px;">
             <p style="color: var(--muted); margin-bottom: 20px;">You are currently using Thing AI as a guest.</p>
-            <button class="setting-btn premium-btn" style="width: 100%;" onclick="window.Clerk.openSignIn()">Sign In to Manage Account</button>
+            <button class="setting-btn premium-btn" style="width: 100%;" onclick="window.location.href='/login'">Sign In to Manage Account</button>
           </div>
         </div>
 
@@ -3895,6 +4401,14 @@
   <div id="app">
 
     <header>
+      <!-- Sidebar trigger — LEFT side (mobile only) -->
+      <button id="sb-mobile-trigger" title="Open Sidebar" aria-label="Toggle sidebar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="9" y1="3" x2="9" y2="21"></line>
+        </svg>
+      </button>
+
       <div class="header-actions">
         <button class="icon-btn" id="plans-btn" title="View Plans">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
@@ -3913,13 +4427,6 @@
           </svg>
         </button>
 
-        <!-- Mobile hamburger (only shows on mobile via CSS) -->
-        <button id="sb-mobile-trigger" title="Open Sidebar">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="9" y1="3" x2="9" y2="21"></line>
-          </svg>
-        </button>
         <button class="icon-btn" id="clear-btn" title="Clear Chat (Privacy Mode)" style="display: none;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
             <polyline points="3 6 5 6 21 6"></polyline>
@@ -3983,7 +4490,7 @@
       <div class="input-wrapper">
         <div class="input-top-row">
           <div class="input-main-row">
-            <input type="text" id="text-input" placeholder="How can I help you today?" autocomplete="off" />
+            <input type="search" id="text-input" placeholder="How can I help you today?" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="search" name="thingai-chat-input" />
           </div>
         </div>
         
@@ -4059,8 +4566,58 @@
     // ══════════════════════════════════════════
     //  CONFIG — Flask backend on same origin
     // ══════════════════════════════════════════
-    const SPEAK_URL = '/speak';
     const INTERRUPT_URL = '/interrupt';
+
+    // ── Professional Notification System ──
+    function showToast(msg, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      
+      let icon = '';
+      if (type === 'success') icon = '✓';
+      else if (type === 'error') icon = '✕';
+      else icon = 'ℹ';
+
+      toast.innerHTML = `<span>${icon}</span> ${msg}`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.add('closing');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    function showConfirm({ title, msg, okText, cancelText, isDanger, onConfirm }) {
+      const modal = document.getElementById('custom-confirm-modal');
+      const titleEl = document.getElementById('confirm-title');
+      const msgEl = document.getElementById('confirm-msg');
+      const okBtn = document.getElementById('confirm-ok');
+      const cancelBtn = document.getElementById('confirm-cancel');
+
+      titleEl.innerText = title || "Are you sure?";
+      msgEl.innerText = msg || "This action cannot be undone.";
+      okBtn.innerText = okText || "Proceed";
+      cancelBtn.innerText = cancelText || "Cancel";
+
+      if (isDanger) okBtn.classList.add('danger');
+      else okBtn.classList.remove('danger');
+
+      modal.classList.add('active');
+
+      const cleanup = () => {
+        modal.classList.remove('active');
+        okBtn.onclick = null;
+        cancelBtn.onclick = null;
+      };
+
+      okBtn.onclick = () => {
+        cleanup();
+        if (onConfirm) onConfirm();
+      };
+
+      cancelBtn.onclick = () => cleanup();
+    }
 
     // ══════════════════════════════════════════
     //  CLERK AUTHENTICATION (Fixed Re-implementation)
@@ -4136,12 +4693,14 @@
           await window.Clerk.load({ appearance: getClerkAppearance() });
 
           const refreshUI = () => {
-            const authGuard = document.getElementById('auth-guard');
+            const userButtonDiv = document.getElementById('user-button');
             const app = document.getElementById('app');
-            const isGuest = localStorage.getItem('isGuest') === 'true';
             const currentAppearance = getClerkAppearance();
 
+            const isSkipped = localStorage.getItem('skipLogin') === 'true';
+
             if (window.Clerk.user) {
+              localStorage.removeItem('skipLogin'); // Clear skip if signed in
               const user = window.Clerk.user;
               if (signInBtn) signInBtn.style.display = 'none';
               if (userButtonDiv) userButtonDiv.style.display = 'block';
@@ -4157,7 +4716,6 @@
                 }
               }
 
-              if (authGuard) authGuard.style.display = 'none';
               if (app) {
                 app.style.filter = 'none';
                 app.style.pointerEvents = 'auto';
@@ -4168,28 +4726,21 @@
                 userButtonDiv.innerHTML = '';
                 window.Clerk.mountUserButton(userButtonDiv, { appearance: currentAppearance });
               }
-            } else if (isGuest) {
+            } else if (isSkipped) {
               if (signInBtn) signInBtn.style.display = 'flex';
               if (userButtonDiv) userButtonDiv.style.display = 'none';
 
-              // Reset Sidebar Profile
+              // Reset Sidebar Profile to Guest
               if (sbUserName) sbUserName.innerText = "Guest User";
               if (sbUserStatus) sbUserStatus.innerText = "Sign in to sync";
               if (sbUserAvatar) sbUserAvatar.innerText = "G";
 
-              if (authGuard) authGuard.style.display = 'none';
               if (app) {
                 app.style.filter = 'none';
                 app.style.pointerEvents = 'auto';
               }
             } else {
-              if (signInBtn) signInBtn.style.display = 'flex';
-              if (userButtonDiv) userButtonDiv.style.display = 'none';
-              if (authGuard) authGuard.style.display = 'flex';
-              if (app) {
-                app.style.filter = 'blur(10px)';
-                app.style.pointerEvents = 'none';
-              }
+              window.location.href = "/login";
             }
           };
 
@@ -4200,7 +4751,7 @@
           observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
           if (signInBtn) {
-            signInBtn.onclick = () => window.Clerk.openSignIn({ appearance: getClerkAppearance() });
+            signInBtn.onclick = () => window.location.href = "/login";
           }
 
           if (sbProfileBtn) {
@@ -4209,36 +4760,24 @@
               if (window.Clerk.user) {
                 window.Clerk.openUserProfile({ appearance: getClerkAppearance() });
               } else {
-                window.Clerk.openSignIn({ appearance: getClerkAppearance() });
+                window.location.href = "/login";
               }
             };
           }
 
-          const guardSignIn = document.getElementById('guard-sign-in-btn');
-          if (guardSignIn) guardSignIn.onclick = () => window.Clerk.openSignIn({ appearance: getClerkAppearance() });
-
-          const guardSignUp = document.getElementById('guard-sign-up-btn');
-          if (guardSignUp) guardSignUp.onclick = () => window.Clerk.openSignUp({ appearance: getClerkAppearance() });
-
-          const guardGuest = document.getElementById('guard-guest-btn');
-          if (guardGuest) guardGuest.onclick = () => {
-            localStorage.setItem('isGuest', 'true');
-            refreshUI();
-          };
 
           window.Clerk.addListener(() => {
-            if (window.Clerk.user) localStorage.removeItem('isGuest');
             refreshUI();
           });
 
         } catch (err) {
           console.error('Clerk Error:', err);
-          if (signInBtn) signInBtn.onclick = () => alert("Auth failed to load.");
+          // Directly redirect or handle silently if fails
         }
       };
 
       script.onerror = () => {
-        if (signInBtn) signInBtn.onclick = () => alert("Could not load Clerk script.");
+        // Handle silently or redirect
       };
 
       document.body.appendChild(script);
@@ -4808,15 +5347,11 @@
         let headers = {};
 
         if (files.length > 0) {
-          body = new FormData();
           body.append('text', text);
           files.forEach(f => body.append('files', f));
-          body.append('isGuest', localStorage.getItem('isGuest') === 'true');
         } else {
-          headers['Content-Type'] = 'application/json';
           body = JSON.stringify({
-            text: text,
-            isGuest: localStorage.getItem('isGuest') === 'true'
+            text: text
           });
         }
 
@@ -5146,7 +5681,10 @@
         // Add signout listener
         const signoutBtn = document.getElementById('settings-signout-btn');
         if (signoutBtn) {
-          signoutBtn.onclick = () => window.Clerk.signOut();
+          signoutBtn.onclick = async () => {
+            await window.Clerk.signOut();
+            window.location.href = "/login";
+          };
         }
       } else {
         content.style.display = 'none';
@@ -5276,20 +5814,15 @@
 
     if (modalClearBtn) {
       modalClearBtn.addEventListener('click', async () => {
-        if (!confirm("Are you sure you want to clear ALL chat history? This cannot be undone.")) return;
         try {
-          // Clear backend session
           await fetch('/clear', { method: 'POST' });
-          
-          // Clear local storage chats
           localStorage.removeItem('sb_chats');
           localStorage.removeItem('sb_active_id');
-          
-          // Clear UI and reload
           document.getElementById('messages').innerHTML = '';
-          location.reload();
+          showToast("Chat history cleared", "success");
+          setTimeout(() => location.reload(), 1000);
         } catch(e) {
-          alert("Failed to clear chat");
+          showToast("Failed to clear chat", "error");
         }
       });
     }
@@ -5352,17 +5885,17 @@
                 const verifyData = await verifyRes.json();
                 if (verifyData.status === 'success') {
                   pricingModal.classList.remove('active');
-                  alert(`Payment Successful! Welcome to ${planName}.`);
+                  showToast(`Payment Successful! Welcome to ${planName}.`, "success");
                   if (premiumBtn) {
                     premiumBtn.innerHTML = planName;
                     premiumBtn.style.pointerEvents = 'none';
                     premiumBtn.style.animation = 'none';
                   }
                 } else {
-                  alert("Payment Verification Failed: " + verifyData.message);
+                  showToast("Payment Verification Failed: " + verifyData.message, "error");
                 }
               } catch (e) {
-                alert("Error verifying payment.");
+                showToast("Error verifying payment.", "error");
               }
             },
             "prefill": {
@@ -5375,11 +5908,11 @@
           };
           const rzp = new window.Razorpay(options);
           rzp.on('payment.failed', function (response){
-            alert("Payment Failed. Reason: " + response.error.description);
+            showToast("Payment Failed: " + response.error.description, "error");
           });
           rzp.open();
         } catch (err) {
-          alert('Error initializing payment: ' + err.message);
+          showToast('Error initializing payment: ' + err.message, "error");
         } finally {
           btnElement.innerText = originalText;
         }
@@ -5499,13 +6032,13 @@
       }
 
       function deleteChat(id) {
-        if (!confirm("Delete this chat?")) return;
         const idx = chats.findIndex(c => c.id === id);
         if (idx === -1) return;
         chats.splice(idx, 1); saveChats();
         if (id === activeId) {
           chats.length > 0 ? switchChat(chats[0].id) : createNewChat();
         } else { renderList(''); }
+        showToast("Chat deleted", "success");
       }
 
       function switchChat(id) {
@@ -5602,8 +6135,8 @@
         }
       }
 
-      function openMobileSidebar() { if ('vibrate' in navigator) navigator.vibrate(10); sidebar.classList.add('mobile-open'); sbOverlay.classList.add('active'); }
-      function closeMobileSidebar() { if ('vibrate' in navigator) navigator.vibrate(8); sidebar.classList.remove('mobile-open'); sbOverlay.classList.remove('active'); }
+      function openMobileSidebar() { if ('vibrate' in navigator) navigator.vibrate(10); sidebar.classList.add('mobile-open'); sbOverlay.classList.add('active'); document.body.classList.add('sidebar-open'); document.body.style.overflow = 'hidden'; }
+      function closeMobileSidebar() { if ('vibrate' in navigator) navigator.vibrate(8); sidebar.classList.remove('mobile-open'); sbOverlay.classList.remove('active'); document.body.classList.remove('sidebar-open'); document.body.style.overflow = ''; }
 
       sidebar.addEventListener('click', (e) => {
         if (sidebar.classList.contains('collapsed')) {
@@ -5805,8 +6338,8 @@ h1 {
                     }
                     renderTabs();
                     document.getElementById('add-file-btn').onclick = () => {
-                      const name = prompt("Enter filename:", "script.js");
-                      if (name) addFile(name);
+                      const name = "new_file_" + Date.now() + ".js";
+                      addFile(name);
                     };
                     
                     const provideInlineCompletions = async (model, position, context, token) => {
@@ -5966,9 +6499,8 @@ h1 {
       if (clearCodeBtn) {
         clearCodeBtn.addEventListener('click', () => {
            if (window.monacoEditor) {
-              if (confirm("Are you sure you want to clear the editor?")) {
-                 window.monacoEditor.setValue('');
-              }
+              window.monacoEditor.setValue('');
+              showToast("Editor cleared", "success");
            }
         });
       }
@@ -6077,8 +6609,11 @@ h1 {
 
       sbProfileBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        // Placeholder for profile action
-        alert("Profile / Sign In clicked");
+        if (!window.Clerk.user) {
+          window.location.href = "/login";
+        } else {
+          window.Clerk.openUserProfile({ appearance: getClerkAppearance() });
+        }
       });
 
       sbSearchInput.addEventListener('input', () => {
@@ -6151,6 +6686,361 @@ h1 {
           .catch(err => console.error('Service Worker registration failed', err));
       });
     }
+
+    // ══════════════════════════════════════════
+    //  STRICT MOBILE RESPONSIVENESS — JAVASCRIPT
+    // ══════════════════════════════════════════
+
+    (function initMobileEnhancements() {
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth <= 768;
+      const sidebar = document.getElementById('chat-sidebar');
+      const sbOverlay = document.getElementById('sb-overlay');
+      const textInput = document.getElementById('text-input');
+      const controlPanel = document.querySelector('.control-panel');
+      const appEl = document.getElementById('app');
+      const appShell = document.getElementById('app-shell');
+
+      // ── VisualViewport API — Keyboard Detection ──
+      if (window.visualViewport) {
+        let previousHeight = window.visualViewport.height;
+        let keyboardOpen = false;
+
+        function handleViewportResize() {
+          const vv = window.visualViewport;
+          const heightDiff = previousHeight - vv.height;
+          const isKeyboardNowOpen = heightDiff > 100; // keyboard takes > 100px
+
+          if (isKeyboardNowOpen && !keyboardOpen) {
+            // Keyboard just opened
+            keyboardOpen = true;
+            document.body.style.overflow = 'hidden';
+            if (controlPanel) {
+              controlPanel.classList.add('keyboard-open');
+            }
+            // Shrink content to visual viewport
+            if (appEl) {
+              appEl.style.height = vv.height + 'px';
+            }
+          } else if (!isKeyboardNowOpen && keyboardOpen) {
+            // Keyboard just closed
+            keyboardOpen = false;
+            document.body.style.overflow = '';
+            if (controlPanel) {
+              controlPanel.classList.remove('keyboard-open');
+            }
+            // Restore full layout
+            if (appEl) {
+              appEl.style.height = '';
+            }
+          }
+
+          // Always keep content sized to viewport when keyboard is open
+          if (keyboardOpen && appEl) {
+            appEl.style.height = vv.height + 'px';
+          }
+
+          previousHeight = vv.height;
+        }
+
+        window.visualViewport.addEventListener('resize', handleViewportResize);
+        window.visualViewport.addEventListener('scroll', () => {
+          // Prevent page from scrolling behind keyboard on iOS
+          if (keyboardOpen) {
+            window.scrollTo(0, 0);
+          }
+        });
+      }
+
+      // ── Blur input after send to dismiss keyboard ──
+      const originalSendTextInput = window.sendTextInput;
+      if (typeof sendTextInput === 'function') {
+        const sendBtnEl = document.getElementById('send-btn');
+        const inputEl = document.getElementById('text-input');
+
+        // Wrap send to blur after sending
+        if (sendBtnEl && inputEl) {
+          sendBtnEl.addEventListener('pointerup', () => {
+            setTimeout(() => {
+              inputEl.blur();
+              // After 300ms delay, re-position search bar to default
+              setTimeout(() => {
+                const cp = document.querySelector('.control-panel');
+                if (cp) cp.classList.remove('keyboard-open');
+                const app = document.getElementById('app');
+                if (app) app.style.height = '';
+              }, 300);
+            }, 50);
+          });
+        }
+      }
+
+      // ── Edge Swipe to Open Sidebar (first 20px from left edge) ──
+      let edgeSwipeStartX = 0;
+      let edgeSwipeStartY = 0;
+      let isEdgeSwiping = false;
+
+      document.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        if (touch.clientX < 20 && !sidebar.classList.contains('mobile-open') && window.innerWidth <= 768) {
+          edgeSwipeStartX = touch.clientX;
+          edgeSwipeStartY = touch.clientY;
+          isEdgeSwiping = true;
+        }
+      }, { passive: true });
+
+      document.addEventListener('touchmove', (e) => {
+        if (!isEdgeSwiping) return;
+        const touch = e.touches[0];
+        const deltaX = touch.clientX - edgeSwipeStartX;
+        const deltaY = Math.abs(touch.clientY - edgeSwipeStartY);
+
+        // Must be horizontal swipe (deltaX > 2*deltaY) and > 60px
+        if (deltaX > 60 && deltaX > 2 * deltaY) {
+          isEdgeSwiping = false;
+          openMobileSidebarGlobal();
+        }
+      }, { passive: true });
+
+      document.addEventListener('touchend', () => {
+        isEdgeSwiping = false;
+      }, { passive: true });
+
+      // ── Swipe Left on Sidebar to Close ──
+      let sidebarSwipeStartX = 0;
+      let sidebarSwipeStartY = 0;
+      let isSidebarSwiping = false;
+
+      if (sidebar) {
+        sidebar.addEventListener('touchstart', (e) => {
+          if (!sidebar.classList.contains('mobile-open') || window.innerWidth > 768) return;
+          const touch = e.touches[0];
+          sidebarSwipeStartX = touch.clientX;
+          sidebarSwipeStartY = touch.clientY;
+          isSidebarSwiping = true;
+        }, { passive: true });
+
+        sidebar.addEventListener('touchmove', (e) => {
+          if (!isSidebarSwiping) return;
+          const touch = e.touches[0];
+          const deltaX = sidebarSwipeStartX - touch.clientX; // positive = swipe left
+          const deltaY = Math.abs(touch.clientY - sidebarSwipeStartY);
+
+          if (deltaX > 60 && deltaX > 2 * deltaY) {
+            isSidebarSwiping = false;
+            closeMobileSidebarGlobal();
+          }
+        }, { passive: true });
+
+        sidebar.addEventListener('touchend', () => {
+          isSidebarSwiping = false;
+        }, { passive: true });
+      }
+
+      // ── Global sidebar open/close helpers ──
+      function openMobileSidebarGlobal() {
+        if ('vibrate' in navigator) navigator.vibrate(10);
+        sidebar.classList.add('mobile-open');
+        sbOverlay.classList.add('active');
+        document.body.classList.add('sidebar-open');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeMobileSidebarGlobal() {
+        if ('vibrate' in navigator) navigator.vibrate(8);
+        sidebar.classList.remove('mobile-open');
+        sbOverlay.classList.remove('active');
+        document.body.classList.remove('sidebar-open');
+        document.body.style.overflow = '';
+      }
+
+      // Enhance existing overlay click to also unlock body scroll
+      if (sbOverlay) {
+        sbOverlay.addEventListener('click', () => {
+          closeMobileSidebarGlobal();
+        });
+      }
+
+      // Also handle the mobile trigger button to add body scroll lock
+      const sbMobileTrig = document.getElementById('sb-mobile-trigger');
+      if (sbMobileTrig) {
+        sbMobileTrig.addEventListener('click', () => {
+          openMobileSidebarGlobal();
+        });
+      }
+
+      // Enhance sidebar toggle button
+      const sbToggleBtn = document.getElementById('sb-toggle-btn');
+      if (sbToggleBtn) {
+        sbToggleBtn.addEventListener('click', () => {
+          if (window.innerWidth <= 768) {
+            closeMobileSidebarGlobal();
+          }
+        });
+      }
+
+      // ── Long Press for Context Actions (500ms) ──
+      let longPressTimer = null;
+      let longPressTarget = null;
+
+      function setupLongPress(element, callback) {
+        element.addEventListener('touchstart', (e) => {
+          longPressTarget = e.target;
+          longPressTimer = setTimeout(() => {
+            if ('vibrate' in navigator) navigator.vibrate(25);
+            callback(e);
+            longPressTimer = null;
+          }, 500);
+        }, { passive: true });
+
+        element.addEventListener('touchmove', () => {
+          if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+          }
+        }, { passive: true });
+
+        element.addEventListener('touchend', () => {
+          if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+          }
+        }, { passive: true });
+      }
+
+      // Long press on chat capsules to show delete option
+      document.addEventListener('touchstart', (e) => {
+        const capsule = e.target.closest('.sb-capsule');
+        if (!capsule) return;
+
+        longPressTimer = setTimeout(() => {
+          if ('vibrate' in navigator) navigator.vibrate(25);
+          const deleteBtn = capsule.querySelector('.sb-capsule-delete');
+          if (deleteBtn) {
+            deleteBtn.style.opacity = '1';
+            setTimeout(() => { deleteBtn.style.opacity = ''; }, 3000);
+          }
+          longPressTimer = null;
+        }, 500);
+      }, { passive: true });
+
+      document.addEventListener('touchmove', () => {
+        if (longPressTimer) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
+      }, { passive: true });
+
+      document.addEventListener('touchend', () => {
+        if (longPressTimer) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
+      }, { passive: true });
+
+      // ── Tooltips: tap to show, dismiss on tap elsewhere ──
+      document.addEventListener('touchstart', (e) => {
+        // Close any open tooltips when tapping elsewhere
+        const openTooltips = document.querySelectorAll('[data-tooltip-active]');
+        openTooltips.forEach(el => {
+          if (!el.contains(e.target)) {
+            el.removeAttribute('data-tooltip-active');
+          }
+        });
+      }, { passive: true });
+
+      // ── Prevent pinch-to-zoom on fixed UI chrome ──
+      const fixedElements = [
+        document.querySelector('.control-panel'),
+        document.querySelector('header'),
+        sidebar
+      ];
+      fixedElements.forEach(el => {
+        if (el) {
+          el.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 1) {
+              e.preventDefault();
+            }
+          }, { passive: false });
+        }
+      });
+
+      // ── Settings Bottom Sheet Drag Handle ──
+      if (window.innerWidth <= 600) {
+        const settingsContainer = document.querySelector('.settings-container');
+        if (settingsContainer) {
+          let sheetStartY = 0;
+          let sheetCurrentY = 0;
+          let isDraggingSheet = false;
+
+          settingsContainer.addEventListener('touchstart', (e) => {
+            // Only allow drag from the top area (drag handle zone)
+            const rect = settingsContainer.getBoundingClientRect();
+            const touchY = e.touches[0].clientY;
+            if (touchY - rect.top < 30) {
+              isDraggingSheet = true;
+              sheetStartY = touchY;
+            }
+          }, { passive: true });
+
+          settingsContainer.addEventListener('touchmove', (e) => {
+            if (!isDraggingSheet) return;
+            sheetCurrentY = e.touches[0].clientY;
+            const deltaY = sheetCurrentY - sheetStartY;
+            if (deltaY > 0) {
+              settingsContainer.style.transform = `translateY(${deltaY}px)`;
+            }
+          }, { passive: true });
+
+          settingsContainer.addEventListener('touchend', () => {
+            if (!isDraggingSheet) return;
+            isDraggingSheet = false;
+            const deltaY = sheetCurrentY - sheetStartY;
+            if (deltaY > 100) {
+              // Dismiss the sheet
+              document.getElementById('settings-modal').classList.remove('active');
+            }
+            settingsContainer.style.transform = '';
+          }, { passive: true });
+        }
+      }
+
+      // ── Pricing Modal Swipe Down to Close (mobile) ──
+      if (window.innerWidth <= 600) {
+        const pricingContainer = document.querySelector('.pricing-container');
+        if (pricingContainer) {
+          let pcStartY = 0;
+          let pcCurrentY = 0;
+          let pcDragging = false;
+
+          pricingContainer.addEventListener('touchstart', (e) => {
+            if (pricingContainer.scrollTop <= 0) {
+              pcDragging = true;
+              pcStartY = e.touches[0].clientY;
+            }
+          }, { passive: true });
+
+          pricingContainer.addEventListener('touchmove', (e) => {
+            if (!pcDragging) return;
+            pcCurrentY = e.touches[0].clientY;
+            const deltaY = pcCurrentY - pcStartY;
+            if (deltaY > 0) {
+              pricingContainer.style.transform = `translateY(${deltaY}px)`;
+            }
+          }, { passive: true });
+
+          pricingContainer.addEventListener('touchend', () => {
+            if (!pcDragging) return;
+            pcDragging = false;
+            const deltaY = pcCurrentY - pcStartY;
+            if (deltaY > 100) {
+              document.getElementById('pricing-modal').classList.remove('active');
+            }
+            pricingContainer.style.transform = '';
+          }, { passive: true });
+        }
+      }
+
+    })(); // end mobile enhancements IIFE
   </script>
 </body>
 
