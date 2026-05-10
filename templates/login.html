@@ -330,6 +330,21 @@
             .mobile-panel.branding, .mobile-panel.login {
                 width: 100% !important;
             }
+            .login-card.expanded {
+                width: 92% !important;
+                max-width: 340px !important;
+                min-height: 480px !important;
+                padding-top: 35px !important;
+                border-radius: 36px !important;
+            }
+            .login-card {
+                width: 300px !important;
+                border-radius: 32px !important;
+            }
+            .login-content {
+                padding-left: 1.5rem !important;
+                padding-right: 1.5rem !important;
+            }
         }
     </style>
 </head>
@@ -403,6 +418,10 @@
 
         <!-- Right Panel (Login) -->
         <div class="mobile-panel w-full md:w-[40%] login flex flex-col items-center justify-center bg-[#c8f5e1] relative overflow-hidden">
+            <!-- Mobile Skip Button (Visible only on mobile for the login tab) -->
+            <button onclick="skipLogin()" class="md:hidden absolute top-6 right-8 z-50 text-sm font-light text-[#1e293b] hover:text-black transition-colors">
+                Skip
+            </button>
             <div id="login-card" class="login-card">
                 <div class="typing-container">
                     <svg id="hat-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="w-10 h-10 mb-3 text-[#1a1a2e]" stroke-width="1.2">

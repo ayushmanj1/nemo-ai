@@ -683,18 +683,23 @@
 
     /* ── Mobile overlay ── */
     #sb-overlay {
-      display: none; position: fixed; inset: 0; z-index: 99;
-      background: rgba(0, 0, 0, 0.6);
+      position: fixed; inset: 0; z-index: 99;
+      background: rgba(0, 0, 0, 0.4);
+      opacity: 0;
+      pointer-events: none;
+      backdrop-filter: blur(0px);
+      -webkit-backdrop-filter: blur(0px);
+      transition: opacity 0.4s ease, backdrop-filter 0.4s ease, -webkit-backdrop-filter 0.4s ease;
+      will-change: opacity, backdrop-filter;
     }
     #sb-overlay.active { 
-      display: block; 
-      animation: sbFadeIn 0.2s ease;
+      opacity: 1;
+      pointer-events: auto;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
     }
 
-    @keyframes sbFadeIn {
-      from { opacity: 0; }
-      to   { opacity: 1; }
-    }
+
 
     /* ── Mobile hamburger (only on mobile) ── */
     #sb-mobile-trigger {
@@ -1926,8 +1931,15 @@
       }
 
       .input-wrapper {
-        padding: 10px 14px;
-        border-radius: 22px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        box-shadow: none !important;
+      }
+      .input-main-row {
+        padding: 2px 0 !important;
+      }
+      .input-bottom-row {
+        margin-top: 6px !important;
       }
 
       .input-main-row input {
@@ -1958,6 +1970,9 @@
         flex-shrink: 0;
         justify-content: flex-end;
       }
+      .control-panel {
+        padding-bottom: 2px !important;
+      }
     }
 
     @media (max-width: 480px) {
@@ -1985,12 +2000,12 @@
       }
 
       #text-input {
-        padding: 8px 0;
+        padding: 4px 0;
         font-size: 0.95rem;
       }
 
       .control-panel {
-        padding-bottom: max(32px, env(safe-area-inset-bottom));
+        padding-bottom: 2px !important;
       }
 
       .attachment-preview {
@@ -3292,11 +3307,11 @@
     /* ═══ SAFE AREA (notch devices) ═══ */
     @supports (padding: env(safe-area-inset-bottom)) {
       .control-panel {
-        padding-bottom: calc(16px + env(safe-area-inset-bottom));
+        padding-bottom: 2px !important;
       }
       @media (max-width: 600px) {
         .control-panel {
-          padding-bottom: calc(8px + env(safe-area-inset-bottom));
+          padding-bottom: 0px !important;
         }
       }
     }
@@ -3800,7 +3815,10 @@
     /* ── Mobile & Tablet sidebar overlay backdrop ── */
     @media (max-width: 1024px) {
       #sb-overlay {
-        display: none !important; /* Removed to match laptop UI */
+        display: block; /* Always block, controlled by opacity */
+      }
+      #sb-search-icon {
+        display: none !important;
       }
     }
 
@@ -4001,10 +4019,10 @@
       left: 0;
       right: 0;
       z-index: 100;
-      padding: 8px 12px calc(8px + env(safe-area-inset-bottom)) !important;
+      padding: 8px 12px 2px !important;
       background: var(--bg);
       border-top: 1px solid var(--border);
-      transition: height 0.2s ease;
+      transition: none !important;
     }
 
     /* ── App height transition for keyboard & sidebar push ── */
@@ -4014,47 +4032,21 @@
     @media (max-width: 1024px) {
       /* Smooth transitions for all elements affected by sidebar toggle */
       #app, .hero-title, .hero-subtitle, .suggestions, .control-panel, .input-wrapper {
-        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1), filter 0.4s ease, -webkit-filter 0.4s ease;
       }
 
       body.sidebar-open #app {
-        transform: translateX(min(75vw, 220px));
-        width: calc(100vw - min(75vw, 220px)) !important;
-        flex: none; /* Prevent flex stretching issues when width changes */
+        filter: blur(10px) brightness(0.9);
+        -webkit-filter: blur(10px) brightness(0.9);
+        pointer-events: none;
+        opacity: 0.6;
       }
       
-      /* Little mode for Thing AI quote when sidebar is open */
-      body.sidebar-open .hero-title {
-        font-size: 1.5rem !important;
-        margin-bottom: 8px !important;
-        letter-spacing: -0.01em !important;
-      }
-      body.sidebar-open .hero-subtitle {
-        font-size: 0.9rem !important;
-        opacity: 0.8;
-      }
 
-      /* Line by line suggestion cards when sidebar is open */
-      body.sidebar-open .suggestions {
-        grid-template-columns: 1fr !important;
-        max-width: 280px !important;
-        gap: 8px !important;
-      }
-      body.sidebar-open .suggestion-card {
-        padding: 8px 12px !important;
-      }
+
+
       
-      /* Compact search bar when sidebar is open */
-      body.sidebar-open .control-panel {
-        padding: 8px 12px !important;
-      }
-      body.sidebar-open .input-wrapper {
-        padding: 4px 10px !important;
-        border-radius: 16px !important;
-      }
-      body.sidebar-open .input-main-row {
-        gap: 6px !important;
-      }
+
 
       /* Hide the main header toggle when sidebar is open so the one next to Thing AI takes over */
       body.sidebar-open #sb-mobile-trigger {
@@ -4074,7 +4066,7 @@
       }
       input[type="text"],
       input[type="search"] {
-        padding: 4px 0;
+        padding: 2px 0;
       }
       
       /* Hide normal chat toggle and plans button on mobile */
@@ -6826,54 +6818,54 @@ h1 {
       const appShell = document.getElementById('app-shell');
 
       // ── VisualViewport API — Keyboard Detection ──
+      // ── VisualViewport API — Keyboard Detection & Sticking ──
       if (window.visualViewport) {
-        let previousHeight = window.visualViewport.height;
         let keyboardOpen = false;
+        const messagesEl = document.getElementById('messages');
+
+        function updateKeyboardPosition() {
+          const vv = window.visualViewport;
+          if (!keyboardOpen || !controlPanel) return;
+
+          // The layout height is what the browser thinks the page height is.
+          // The visualViewport height is what the user actually sees (excluding keyboard).
+          // offsetTop is how much the user has scrolled the visual viewport.
+          // We need to place the fixed bar exactly at the bottom of the visible area.
+          const layoutHeight = window.innerHeight;
+          const visibleBottom = vv.offsetTop + vv.height;
+          const keyboardOffset = layoutHeight - visibleBottom;
+
+          // On some browsers, we need to account for the scroll position
+          // to keep the "fixed" element truly fixed to the visual bottom.
+          controlPanel.style.bottom = `${keyboardOffset}px`;
+        }
 
         function handleViewportResize() {
           const vv = window.visualViewport;
-          const heightDiff = previousHeight - vv.height;
-          const isKeyboardNowOpen = heightDiff > 100; // keyboard takes > 100px
+          const isKeyboardNowOpen = (window.innerHeight - vv.height) > 100;
 
-          if (isKeyboardNowOpen && !keyboardOpen) {
-            // Keyboard just opened
+          if (isKeyboardNowOpen) {
             keyboardOpen = true;
-            document.body.style.overflow = 'hidden';
-            if (controlPanel) {
-              controlPanel.classList.add('keyboard-open');
+            controlPanel?.classList.add('keyboard-open');
+            updateKeyboardPosition();
+            
+            if (messagesEl) {
+              const inputHeight = controlPanel ? controlPanel.offsetHeight : 80;
+              const keyboardHeight = window.innerHeight - vv.height;
+              messagesEl.style.paddingBottom = `${keyboardHeight + inputHeight}px`;
             }
-            // Shrink content to visual viewport
-            if (appEl) {
-              appEl.style.height = vv.height + 'px';
-            }
-          } else if (!isKeyboardNowOpen && keyboardOpen) {
-            // Keyboard just closed
+          } else {
             keyboardOpen = false;
-            document.body.style.overflow = '';
             if (controlPanel) {
               controlPanel.classList.remove('keyboard-open');
+              controlPanel.style.bottom = '';
             }
-            // Restore full layout
-            if (appEl) {
-              appEl.style.height = '';
-            }
+            if (messagesEl) messagesEl.style.paddingBottom = '';
           }
-
-          // Always keep content sized to viewport when keyboard is open
-          if (keyboardOpen && appEl) {
-            appEl.style.height = vv.height + 'px';
-          }
-
-          previousHeight = vv.height;
         }
 
         window.visualViewport.addEventListener('resize', handleViewportResize);
-        window.visualViewport.addEventListener('scroll', () => {
-          // Prevent page from scrolling behind keyboard on iOS
-          if (keyboardOpen) {
-            window.scrollTo(0, 0);
-          }
-        });
+        window.visualViewport.addEventListener('scroll', updateKeyboardPosition);
       }
 
       // ── Blur input after send to dismiss keyboard ──
