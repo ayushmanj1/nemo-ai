@@ -6,6 +6,7 @@ import io
 import json
 import requests
 import xml.etree.ElementTree as ET
+import concurrent.futures
 from urllib.parse import quote_plus
 from dotenv import load_dotenv
 from backend.Utils import UniversalAI
@@ -33,7 +34,7 @@ def _mark_rate_limited(api_name):
     _RATE_LIMIT_COOLDOWN[api_name] = _time.time()
     print(f"[RateLimit] 🚫 {api_name} marked as rate-limited for {RATE_LIMIT_COOLDOWN_SECONDS}s")
 
-# Force UTF-8 encodinggit 
+# Force UTF-8 encoding
 if sys.stdout.encoding != 'utf-8':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
@@ -541,47 +542,48 @@ def GoogleSearch(query, query_types=None):
     results = []
     primary_succeeded = False
 
-    # ── STEP 0: Dedicated APIs for specific data types ──────────────
-    if "weather" in query_types:
-        weather_result = fetch_weather(query)
-        if weather_result:
-            results.append({
-                'title': '[LIVE WEATHER] Weather Data',
-                'body': weather_result,
-                'href': f'https://wttr.in/{query}'
-            })
+    # ── STEP 0-3: Run searches in parallel ──────────────────────────
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        future_to_search = {}
+        
+        if "weather" in query_types:
+            future_to_search[executor.submit(fetch_weather, query)] = "weather"
+            
+        if "financial" in query_types:
+            future_to_search[executor.submit(fetch_financial_data, query)] = "financial"
+            
+        future_to_search[executor.submit(fetch_tavily_search, search_query)] = "tavily"
+        future_to_search[executor.submit(fetch_serper_search, search_query)] = "serper"
+        
+        if is_time_sensitive:
+            future_to_search[executor.submit(fetch_google_news_rss, search_query)] = "news"
 
-    if "financial" in query_types:
-        fin_results = fetch_financial_data(query)
-        results.extend(fin_results)
-
-    # ── STEP 1: TAVILY (Primary Search Engine) ──────────────────────
-    try:
-        tavily_results = fetch_tavily_search(search_query)
-        if tavily_results:
-            results.extend(tavily_results)
-            primary_succeeded = True
-            print(f"[GoogleSearch] ✅ Tavily returned {len(tavily_results)} results")
-    except Exception as e:
-        print(f"[GoogleSearch] Tavily Error: {e}")
-
-    # ── STEP 2: SERPER (Secondary, or supplement) ───────────────────
-    # Always try Serper too — it has Knowledge Graph and Answer Box
-    # that Tavily might not have, giving richer answers
-    try:
-        serper_results = fetch_serper_search(search_query)
-        if serper_results:
-            results.extend(serper_results)
-            primary_succeeded = True
-            print(f"[GoogleSearch] ✅ Serper returned {len(serper_results)} results")
-    except Exception as e:
-        print(f"[GoogleSearch] Serper Error: {e}")
-
-    # ── STEP 3: Google News RSS (supplement for current affairs) ────
-    if is_time_sensitive:
-        news_results = fetch_google_news_rss(search_query)
-        if news_results:
-            results.extend(news_results[:3])  # Limit to 3 news articles
+        for future in concurrent.futures.as_completed(future_to_search):
+            stype = future_to_search[future]
+            try:
+                data = future.result()
+                if not data: continue
+                
+                if stype == "weather":
+                    results.append({
+                        'title': '[LIVE WEATHER] Weather Data',
+                        'body': data,
+                        'href': f'https://wttr.in/{query}'
+                    })
+                elif stype == "financial":
+                    results.extend(data)
+                elif stype == "tavily":
+                    results.extend(data)
+                    primary_succeeded = True
+                    print(f"[GoogleSearch] ✅ Tavily returned {len(data)} results")
+                elif stype == "serper":
+                    results.extend(data)
+                    primary_succeeded = True
+                    print(f"[GoogleSearch] ✅ Serper returned {len(data)} results")
+                elif stype == "news":
+                    results.extend(data[:3])
+            except Exception as e:
+                print(f"[GoogleSearch] Error in {stype} search: {e}")
 
     # ── STEP 4: FALLBACKS (only if primary engines both failed) ─────
     if not primary_succeeded:
@@ -660,15 +662,7 @@ def GoogleSearch(query, query_types=None):
             news_results = fetch_google_news_rss(query)
             results.extend(news_results)
 
-    if not results:
-        return f"No search results found for '{query}'."
-
-    print(f"[GoogleSearch] 🏁 Total results collected: {len(results)}")
-    Answer = f"The real-time search results for '{query}' are:\n[start]\n"
-    for i in results:
-        Answer += f"Title: {i.get('title')}\nDescription: {i.get('body')}\nUrl: {i.get('href')}\n\n"
-    Answer += "[end]"
-    return Answer
+    return results
 
 
 def Information():
@@ -682,42 +676,34 @@ def RealtimeSearchEngine(prompt, provided_messages=None, user_name=None):
     if user_name is None:
         user_name = DefaultUsername
 
-    print(f"[RealtimeSearchEngine] 🔍 Query: '{prompt}'")
-
     # Clean and detect query type
     search_query = clean_search_query(prompt)
     query_types = detect_query_type(search_query)
 
     print(f"[RealtimeSearchEngine] 🌐 Searching for: '{search_query}' (types: {query_types})")
     search_data = GoogleSearch(search_query, query_types)
+    
+    if not search_data:
+        print("[RealtimeSearchEngine] ⚠️ No search results found")
+        search_data = []
 
-    now = datetime.datetime.now()
-    date_info = Information()
-
-    # --- KEY FIX: Inject search data into the USER message, not just system prompt ---
-    # LLMs (especially Llama) pay much more attention to user messages than system prompts.
-    # This RAG-style approach forces the model to read and use the live search data.
+    # --- Construct RAG Context ---
+    search_context = ""
+    for i, r in enumerate(search_data[:10]):
+        search_context += f"SOURCE {i+1}:\nTitle: {r.get('title')}\nURL: {r.get('href')}\nContent: {r.get('body')}\n\n"
 
     system_content = GetSystemMessage(user_name)
-
-    # Build a RAG-style user message with search context embedded
-    rag_user_message = f"""### REAL-TIME SEARCH RESULTS (As of {now.strftime('%B %d, %Y')}) ###
-{search_data}
+    rag_user_message = f"""### REAL-TIME SEARCH RESULTS ###
+{search_context}
 ----------------------------------
-
-### INSTRUCTIONS ###
-1. Answer the question using ONLY the provided search results.
-2. The search results above are LIVE and CORRECT. If they contradict your knowledge (e.g., about leaders, prices, dates), TRUST THE SEARCH RESULTS.
-3. Your training data is OUTDATED. Do NOT use it.
-4. If the results say Rekha Gupta is CM, she is CM. If they say gold is $2k, it is $2k.
 
 Question: {prompt}
 """
 
     print(f"[RealtimeSearchEngine] 🤖 Calling LLM with AGGRESSIVE RAG prompt...")
 
-    # We use a very low temperature for factual accuracy
-    # We pass a shorter history to prevent old answers from biasing the model
+    # Final LLM Generation
+    # We keep the status in Answer so that WebMain.py diffing works
     Answer = ""
     chunk_count = 0
     for chunk in UniversalAI(rag_user_message, system_prompt=system_content, history=provided_messages[-2:], temperature=0.0):
@@ -728,9 +714,10 @@ Question: {prompt}
     print(f"[RealtimeSearchEngine] 🏁 Done. Chunks: {chunk_count}")
 
     if Answer:
-        # Store the original prompt in history (not the RAG wrapper)
+        # Save to history
+        clean_history_answer = Answer
         provided_messages.append({"role": "user", "content": prompt})
-        provided_messages.append({"role": "assistant", "content": Answer})
+        provided_messages.append({"role": "assistant", "content": clean_history_answer})
 
 
 if __name__ == "__main__":

@@ -66,14 +66,18 @@ def ChatBot(Query, provided_messages=None, user_name=None, document_context=None
     system_content = GetSystemMessage(user_name, document_context=document_context)
     combined_system_prompt = system_content + "\n" + RealtimeInformation()
     
+    # Initial status
     Answer = ""
+
     for chunk in UniversalAI(Query, system_prompt=combined_system_prompt, history=provided_messages, mode=mode):
         Answer += chunk
         yield Answer
 
     if Answer:
+        # Save to history
+        clean_answer = Answer
         provided_messages.append({"role": "user", "content": Query})
-        provided_messages.append({"role": "assistant", "content": Answer})
+        provided_messages.append({"role": "assistant", "content": clean_answer})
 
 def ClearChatHistory(provided_messages=None):
     if provided_messages is not None:

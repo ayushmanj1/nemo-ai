@@ -73,6 +73,11 @@ Your ONLY task is to categorize the user's query into one or more categories.
 4. DO NOT provide any text other than the categorized tags.
 5. If the user query is multiple things, separate tags with a comma.
 6. If the user query matches NO specific task, always choose 'general query'.
+7. USE the recent conversation context to understand follow-up queries.
+   For example, if the user previously asked about "Virat Kohli" and now asks "his father",
+   you MUST expand it using context: 'general Virat Kohli his father' or 'realtime Virat Kohli his father'.
+8. For vague follow-ups like "are you sure", "yes", "ok", "tell me more", "give link", etc.,
+   treat them as 'general query' and include the original topic in your tag.
 """
 
 # Define a chat history with predefined user-chatbot interactions for context.
@@ -106,7 +111,7 @@ ChatHistory = [
 ]
 
 # Define the main function for decision-making on queries.
-def FirstLayerDMM(prompt: str = "test"):
+def FirstLayerDMM(prompt: str = "test", conversation_history: list = None):
     # 1. Fast Pass: Keyword-based real-time detection
     if is_realtime_query(prompt):
         print(f"[Model] Fast Pass: Real-time query detected for '{prompt}'")
@@ -121,6 +126,17 @@ def FirstLayerDMM(prompt: str = "test"):
             for msg in ChatHistory:
                 role = "user" if msg["role"] == "User" else "assistant"
                 groq_messages.append({"role": role, "content": msg["message"]})
+            
+            # Inject recent conversation context so follow-up queries are understood
+            if conversation_history:
+                recent = conversation_history[-6:]  # Last 3 exchanges (user+assistant pairs)
+                context_block = "\n".join(
+                    f"{'User' if m['role'] == 'user' else 'Assistant'}: {m['content'][:150]}"
+                    for m in recent
+                )
+                groq_messages.append({"role": "user", "content": f"[Recent conversation context]:\n{context_block}\n\n[Now categorize this new query]:"})
+                groq_messages.append({"role": "assistant", "content": "Understood, I will use this context to categorize the next query."})
+            
             groq_messages.append({"role": "user", "content": prompt})
 
             try:

@@ -94,7 +94,8 @@
       --editor-bg: #fcfaf5;
       --editor-header-bg: #4a3728;
       --editor-tabs-bg: #ede4d9;
-      --editor-tab-text: #4a3728;
+      --editor-tab-text: #f8f5f2; /* Light color for icons on dark header */
+      --editor-tab-inactive-text: #4a3728; /* Dark color for text on light tabs */
     }
 
     [data-theme="dark"] {
@@ -116,7 +117,8 @@
       --editor-bg: #0a0a0a;
       --editor-header-bg: #1a1a1a;
       --editor-tabs-bg: #252525;
-      --editor-tab-text: #ececec;
+      --editor-tab-text: #ffffff;
+      --editor-tab-inactive-text: #8e8ea0;
     }
 
     /* ══════════════════════════════════════════
@@ -3634,7 +3636,7 @@
       background: var(--editor-tabs-bg);
       border: none;
       font-size: 13px;
-      color: var(--editor-tab-text);
+      color: var(--editor-tab-inactive-text);
       cursor: pointer;
       position: relative;
       transition: background 0.2s, color 0.2s;
@@ -3644,8 +3646,8 @@
       color: #171717;
     }
     .editor-tab.active {
-      background: #fcfaf5;
-      color: #4a3728;
+      background: var(--editor-bg);
+      color: var(--text-primary);
       font-weight: 500;
     }
     .editor-tab.active::before {
@@ -3669,7 +3671,7 @@
       font-size: 10px;
     }
     .editor-tab:hover .tab-close { opacity: 0.6; }
-    .tab-close:hover { background: rgba(255, 255, 255, 0.1); color: #ffffff; opacity: 1; }
+    .tab-close:hover { background: rgba(150, 150, 150, 0.3); opacity: 1; }
 
     .add-file-btn {
       width: 35px;
@@ -3747,7 +3749,7 @@
       transition: background 0.2s;
     }
     .editor-action-icon:hover {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(150, 150, 150, 0.2);
     }
     .editor-action-icon svg {
       width: 16px;
@@ -5471,7 +5473,9 @@
       }
       isSending = true;
       showTyping();
-      setStatus(files.length > 0 ? 'Thing is reading your documents...' : 'Thing is thinking...', 'ai');
+      if (files.length > 0) {
+        setStatus('Thing is reading your documents...', 'ai');
+      }
       
       let aiBubble = null;
       wordQueue = [];
@@ -5562,10 +5566,13 @@
             const blockRegex = /```(html|css|javascript|js|python|cpp|c|java|rust|go|plaintext)?\n([\s\S]*?)```/ig;
             let match;
             let updatedAny = false;
+            const injectedFiles = [];
             
             while ((match = blockRegex.exec(rawText)) !== null) {
               const lang = (match[1] || '').toLowerCase();
-              const code = match[2].trim();
+              let code = match[2];
+              // Strip update_editor tag if present
+              code = code.replace(/^\s*update_editor\s*\n?/i, '').trim();
               
               let targetExt = null;
               let defaultName = null;
@@ -5576,14 +5583,15 @@
               else if (lang === 'python') { targetExt = '.py'; defaultName = 'main.py'; }
               else if (lang === 'cpp') { targetExt = '.cpp'; defaultName = 'main.cpp'; }
               else if (lang === 'c') { targetExt = '.c'; defaultName = 'main.c'; }
+              else if (lang === 'java') { targetExt = '.java'; defaultName = 'Main.java'; }
+              else if (lang === 'rust') { targetExt = '.rs'; defaultName = 'main.rs'; }
+              else if (lang === 'go') { targetExt = '.go'; defaultName = 'main.go'; }
               
               if (targetExt) {
-                // Look for existing file with this extension
                 let file = window.editorFiles.find(f => f.name.endsWith(targetExt));
                 
                 if (!file) {
-                  // AUTO-CREATE FILE if not found
-                  const id = 'f' + Date.now();
+                  const id = 'f' + Date.now() + Math.random().toString(36).slice(2,5);
                   const monacoLang = (lang === 'js' ? 'javascript' : lang);
                   file = { id, name: defaultName, content: '', language: monacoLang, model: monaco.editor.createModel('', monacoLang) };
                   window.editorFiles.push(file);
@@ -5593,20 +5601,42 @@
                 if (file && file.model) {
                   file.model.setValue(code);
                   updatedAny = true;
-                  // Always switch to the file we just updated
+                  injectedFiles.push(file.name);
                   if (typeof switchFile === 'function') switchFile(file.id);
                 }
-              } else if (window.editorFiles.length === 1 || rawText.includes('update_editor')) {
+              } else if (window.editorFiles.length === 1) {
                 if (window.monacoEditor) {
                   window.monacoEditor.setValue(code);
                   updatedAny = true;
+                  const af = window.editorFiles.find(f => f.id === window.activeFileId);
+                  if (af) injectedFiles.push(af.name);
                 }
               }
             }
             
             if (updatedAny) {
+              // Clean the chat bubble — remove code blocks, keep any explanation text
+              let cleanedText = rawText;
+              cleanedText = cleanedText.replace(/```(?:html|css|javascript|js|python|cpp|c|java|rust|go|plaintext)?\n[\s\S]*?```/gi, '').trim();
+              // Remove update_editor leftovers
+              cleanedText = cleanedText.replace(/update_editor/gi, '').trim();
+              
+              const fileList = injectedFiles.join(', ');
+              const injectionNotice = `<div style="display:flex;align-items:center;gap:8px;color:var(--accent);font-weight:500;font-size:0.85rem;padding:10px 0;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Code updated in ${fileList}
+              </div>`;
+              
+              if (cleanedText) {
+                aiBubble.innerHTML = formatCodeDuringStreaming(cleanedText) + injectionNotice;
+              } else {
+                aiBubble.innerHTML = injectionNotice;
+              }
+              
               setTimeout(() => {
-                if (window.monacoEditor) window.monacoEditor.getAction('editor.action.formatDocument').run();
+                if (window.monacoEditor) {
+                  try { window.monacoEditor.getAction('editor.action.formatDocument').run(); } catch(e) {}
+                }
               }, 100);
             }
           }
@@ -5644,25 +5674,23 @@
 
       const isEditorMode = document.getElementById('app-shell').classList.contains('editor-mode-active');
       if (isEditorMode) {
-         const hasUpdate = formatted.includes('update_editor');
-         if (hasUpdate) {
-            formatted = formatted.replace(/```(?:[a-z]*)(?:\s|<br>)*update_editor(?:<br>|\s)*([\s\S]*?)(?:```|$)/ig, '<div style="color: var(--accent); font-weight: 500; font-size: 0.85rem; padding: 8px 0; margin-top: 4px;">[Code generated and injected into editor]</div>');
-         } else {
-            // Check if we should still hide it because it's a single block that will be auto-injected
-            const codeBlocks = text.match(/```(?:[a-z]*)\n([\s\S]*?)```/ig);
-            if (codeBlocks && codeBlocks.length === 1) {
-               const lastUserRow = document.querySelectorAll('.msg-row.you');
-               const lastUserMsg = lastUserRow.length ? lastUserRow[lastUserRow.length-1].querySelector('.bubble').innerText.toLowerCase() : '';
-               const isExplaining = lastUserMsg.includes('explain') || lastUserMsg.includes('how') || lastUserMsg.includes('why') || lastUserMsg.includes('what');
-               if (!isExplaining) {
-                  formatted = formatted.replace(/```(?:[a-z]*)(?:<br>|\s)*([\s\S]*?)(?:```|$)/g, '<div style="color: var(--accent); font-weight: 500; font-size: 0.85rem; padding: 8px 0; margin-top: 4px;">[Code generated and injected into editor]</div>');
-               }
-            }
+         // In editor mode, hide ALL code blocks during streaming since they'll be auto-injected
+         // Replace them with a subtle writing indicator
+         const hasCodeBlocks = text.match(/```(?:[a-z]*)\n/i);
+         if (hasCodeBlocks) {
+            // Remove complete code blocks
+            formatted = formatted.replace(/```(?:[a-z]*)(?:<br>|\s)*(?:update_editor(?:<br>|\s)*)?([\s\S]*?)```/gi, 
+              '<div style="color: var(--accent); font-size: 0.82rem; padding: 6px 0; opacity: 0.7;"><span style="display:inline-block;animation:pulse 1.5s infinite;">✦</span> Writing code...</div>');
+            // Remove any trailing unclosed code block (still streaming)
+            formatted = formatted.replace(/```(?:[a-z]*)(?:<br>|\s)*(?:update_editor(?:<br>|\s)*)?([\s\S]*)$/gi,
+              '<div style="color: var(--accent); font-size: 0.82rem; padding: 6px 0; opacity: 0.7;"><span style="display:inline-block;animation:pulse 1.5s infinite;">✦</span> Writing code...</div>');
          }
+         // Also clean up update_editor text if it leaks
+         formatted = formatted.replace(/update_editor/gi, '');
+         return formatted;
       }
 
-      // Detect code blocks and format them if they are closed or partially open
-      // We look for triple backticks and if found, we wrap in a container
+      // Normal mode: Detect code blocks and format them with syntax highlighting
       if (formatted.includes('```')) {
          return formatted.replace(/```(\w+)?\s*([\s\S]*?)```/g, (match, lang, code) => {
             const l = (lang || 'code').trim();
@@ -5726,10 +5754,26 @@
 
       let backendText = text;
       const isEditorMode = document.getElementById('app-shell').classList.contains('editor-mode-active');
-      if (isEditorMode && window.monacoEditor) {
-         const editorCode = window.monacoEditor.getValue();
-         if (editorCode.trim()) {
-            backendText = `${text}\n\n[USER CURRENT EDITOR CODE]:\n\`\`\`\n${editorCode}\n\`\`\`\nIMPORTANT INSTRUCTION: If you are providing a FULL code replacement for the user's editor, you MUST start your markdown code block with the tag 'update_editor' (e.g. \`\`\`html update_editor). If you are just answering a question, explaining logic, or providing a small snippet, DO NOT use 'update_editor'. Just use normal markdown blocks. Only blocks with 'update_editor' will be sent to their editor.`;
+      if (isEditorMode && window.editorFiles && window.editorFiles.length > 0) {
+         // Build context from ALL editor files with line numbers
+         let allFilesContext = '';
+         window.editorFiles.forEach(file => {
+           const content = file.model ? file.model.getValue() : (file.content || '');
+           if (content.trim()) {
+             const numberedLines = content.split('\n').map((line, i) => `${i + 1}: ${line}`).join('\n');
+             allFilesContext += `\n--- FILE: ${file.name} (${file.language}) ---\n${numberedLines}\n`;
+           }
+         });
+         const activeFile = window.editorFiles.find(f => f.id === window.activeFileId);
+         const activeFileName = activeFile ? activeFile.name : 'unknown';
+         if (allFilesContext.trim()) {
+            backendText = `${text}\n\n[EDITOR FILES - Active: ${activeFileName}]:${allFilesContext}\n
+IMPORTANT RULES FOR CODING:
+1. The user's code is provided above with line numbers (e.g., 1: <html>). 
+2. If you want to update or "edit" a file, you MUST provide the FULL, COMPLETE content of the file in a markdown code block. 
+3. DO NOT use line numbers in your output code blocks.
+4. DO NOT provide partial snippets or just the changed lines, as your code block will REPLACE the entire file in the user's editor.
+5. If you are just explaining code or answering a question without intending to update the editor, do NOT use markdown code blocks; use plain text or inline code.`;
          }
       }
       sendToBackend(backendText, selectedFiles);

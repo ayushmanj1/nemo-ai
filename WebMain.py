@@ -177,10 +177,14 @@ def speak():
     def generate():
         print(f"\n[WebMain] Streaming started for: {user_text}")
         try:
+            # Separate the user's actual question from the large editor context 
+            # so the decision model doesn't get confused and hallucinate tasks.
+            actual_prompt = user_text.split('\n\n[EDITOR FILES')[0].strip()
+            
             if document_context:
-                Decision = ["general " + user_text]
+                Decision = ["general " + actual_prompt]
             else:
-                Decision = FirstLayerDMM(user_text)
+                Decision = FirstLayerDMM(actual_prompt, conversation_history=history)
         except:
             Decision = ["general " + user_text]
 
@@ -206,7 +210,6 @@ def speak():
                 print(f"[WebMain] 🚀 Executing task: '{task}'")
                 if "generate image" in task:
                     prompt = task.replace("generate image", "").strip()
-                    yield json.dumps({"reply": f"Generating images for '{prompt}'...", "status": "working"}) + "\n"
                     abs_img = GenerateImages(prompt)
                     if abs_img and os.path.exists(abs_img):
                         filename = os.path.basename(abs_img)
@@ -216,19 +219,13 @@ def speak():
                         yield json.dumps({"reply": "Image generation failed.", "status": "error"}) + "\n"
 
                 elif any(tag in task.lower() for tag in ["realtime", "general", "content"]):
-                    # Robust cleaning: remove tags and any surrounding parentheses
-                    clean_query = task.lower()
-                    for tag in ["realtime", "general", "content"]:
-                        clean_query = clean_query.replace(tag, "")
-                    
-                    clean_query = clean_query.strip().strip("()").strip()
-                    modified_query = QueryModifier(clean_query)
-                    
+                    # We pass the full user_text (which contains the editor context) 
+                    # to the models so they can actually 'see' the code and line numbers.
                     if "realtime" in task:
-                        generator = RealtimeSearchEngine(modified_query, provided_messages=history, user_name=username)
+                        generator = RealtimeSearchEngine(user_text, provided_messages=history, user_name=username)
                     else:
                         is_coding = "content" in task.lower()
-                        generator = ChatBot(modified_query, provided_messages=history, user_name=username, document_context=document_context, mode="coding" if is_coding else "general")
+                        generator = ChatBot(user_text, provided_messages=history, user_name=username, document_context=document_context, mode="coding" if is_coding else "general")
 
                     last_sent_len = 0
                     for full_answer in generator:

@@ -36,7 +36,8 @@ def UniversalAI(prompt, system_prompt=None, history=None, stream=True, temperatu
     messages.append({"role": "user", "content": prompt})
 
     # Determine primary model based on mode
-    primary_model = "deepseek-r1-distill-llama-70b" if mode == "coding" else "llama-3.3-70b-versatile"
+    # Note: deepseek-r1-distill-llama-70b was decommissioned by Groq
+    primary_model = "llama-3.3-70b-versatile"
 
     # Strategy 1: Primary Groq Model
     if groq_client:
@@ -97,7 +98,7 @@ def UniversalAI(prompt, system_prompt=None, history=None, stream=True, temperatu
                     message=prompt,
                     preamble=system_prompt,
                     # Cohere handles history differently, but for simplicity we keep it as is or adapt
-                chat_history=[{"role": m["role"].upper() if m["role"].lower() == "user" else "CHATBOT", "message": m["content"]} for m in history[-5:]],
+                    chat_history=[{"role": m["role"].upper() if m["role"].lower() == "user" else "CHATBOT", "message": m["content"]} for m in history[-5:]],
                     connectors=[]
                 )
                 for event in stream_resp:
