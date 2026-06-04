@@ -9,7 +9,8 @@ from PIL import Image
 # Define paths
 current_dir = os.path.dirname(os.path.abspath(__file__))
 base_dir = os.path.dirname(current_dir)
-data_dir = os.path.join(base_dir, "Data")
+is_vercel = os.environ.get("VERCEL") == "1"
+data_dir = os.path.join("/tmp", "Data") if is_vercel else os.path.join(base_dir, "Data")
 
 # Load environment variables
 load_dotenv()

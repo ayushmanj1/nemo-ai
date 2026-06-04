@@ -33,11 +33,17 @@ Assistantname = os.getenv("Assistantname", "Thing")
 
 # ── File-based status helpers (legacy, kept for minimal changes) ──────────────
 current_dir = os.getcwd()
-TempDirPath = os.path.join(current_dir, "Frontend", "Files")
+is_vercel = os.environ.get("VERCEL") == "1"
+data_base_dir = "/tmp" if is_vercel else current_dir
+
+TempDirPath = os.path.join(data_base_dir, "Frontend", "Files")
 
 # Ensure directories exist
-os.makedirs(TempDirPath, exist_ok=True)
-os.makedirs(os.path.join(current_dir, "Data"), exist_ok=True)
+try:
+    os.makedirs(TempDirPath, exist_ok=True)
+    os.makedirs(os.path.join(data_base_dir, "Data"), exist_ok=True)
+except Exception as e:
+    print(f"Failed to create directories: {e}")
 
 # ── NOW import the backend modules ──────────
 from backend.Model import FirstLayerDMM
@@ -112,7 +118,7 @@ def clear_chat():
 @app.route("/Data/<path:filename>")
 @app.route("/data/<path:filename>")
 def serve_data(filename):
-    data_folder = os.path.join(current_dir, "Data")
+    data_folder = os.path.join(data_base_dir, "Data")
     response = send_from_directory(data_folder, filename)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
     return response
