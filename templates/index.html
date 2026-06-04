@@ -5561,7 +5561,6 @@
 
         if (!response.ok) throw new Error('HTTP ' + response.status);
 
-        removeTyping();
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         
@@ -5573,8 +5572,16 @@
         processWordQueue(aiBubble);
         
         let buffer = '';
+        let firstChunkReceived = false;
+
         while (true) {
           const { value, done } = await reader.read();
+          
+          if (!firstChunkReceived) {
+              removeTyping();
+              firstChunkReceived = true;
+          }
+          
           if (done) break;
           
           buffer += decoder.decode(value, { stream: true });
