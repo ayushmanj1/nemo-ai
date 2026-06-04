@@ -90,6 +90,11 @@ def index():
     response.headers['Expires'] = '0'
     return response
 
+@app.errorhandler(Exception)
+def handle_exception(e):
+    import traceback
+    return jsonify(error=str(e), traceback=traceback.format_exc()), 500
+
 @app.route("/login")
 def login():
     clerk_pub_key = os.getenv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "")
@@ -185,7 +190,10 @@ def speak():
                 Decision = ["general " + actual_prompt]
             else:
                 Decision = FirstLayerDMM(actual_prompt, conversation_history=history)
-        except:
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            print(f"[WebMain] FirstLayerDMM failed with error: {e}")
             Decision = ["general " + user_text]
 
         accumulated_reply = ""

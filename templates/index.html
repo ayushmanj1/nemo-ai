@@ -121,6 +121,10 @@
       --editor-tab-inactive-text: #8e8ea0;
     }
 
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+
     /* ══════════════════════════════════════════
        SIDEBAR — Root Layout & Transitions
     ══════════════════════════════════════════ */
@@ -147,6 +151,7 @@
       z-index: 100;
       padding: 0;
       color: #171717;
+      border-radius: 0 24px 24px 0;
     }
 
     [data-theme="dark"] #chat-sidebar {
@@ -331,11 +336,9 @@
     .sb-logo-group { display: flex; align-items: center; gap: 10px; }
     .sb-logo-icon {
       width: 32px; height: 32px; border-radius: 8px;
-      background: linear-gradient(135deg, #06b6d4, #3b82f6); /* Premium Cyan-Blue */
-      display: flex; align-items: center; justify-content: center;
-      color: #fff; font-size: 14px; font-weight: 700;
-      font-family: 'Syne', sans-serif; flex-shrink: 0;
-      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+      object-fit: cover;
+      display: block;
+      flex-shrink: 0;
     }
     .sb-logo-text {
       font-size: 16px; font-weight: 400; letter-spacing: -0.02em;
@@ -511,13 +514,13 @@
     .sb-capsule {
       border-radius: 6px;
       background: transparent;
-      padding: 6px 12px;
-      margin-bottom: 1px;
+      padding: 0px 6px;
+      margin-bottom: 0px;
       font-size: 13px; font-weight: 400;
       color: var(--text-primary);
       cursor: pointer;
       transition: all 0.15s ease;
-      display: flex; align-items: center; gap: 8px;
+      display: flex; align-items: center; gap: 6px;
       position: relative;
       animation: fadeInUp 350ms ease-out both;
     }
@@ -612,7 +615,7 @@
     }
     .sb-profile-avatar {
       width: 32px; height: 32px; border-radius: 50%;
-      background: linear-gradient(135deg, #06b6d4, #3b82f6);
+      background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
       display: flex; align-items: center; justify-content: center;
       color: #fff; font-size: 13px; font-weight: 700;
       font-family: 'Syne', sans-serif; flex-shrink: 0;
@@ -1988,40 +1991,49 @@
         right: 0 !important;
         width: 100% !important;
         margin: 0 !important;
-        padding: 8px 12px calc(8px + env(safe-area-inset-bottom)) !important;
-        background: var(--bg) !important;
+        padding: 8px 10px calc(6px + env(safe-area-inset-bottom)) !important;
+        background: transparent !important;
         z-index: 100 !important;
         transform: none !important;
-        border-top: 1px solid var(--border) !important;
+        border-top: none !important;
+        transition: bottom 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
       }
 
       #app-shell.private-mode-active .control-panel {
-        background: #1a1a1a !important;
-        border-top: 1px solid rgba(255,255,255,0.08) !important;
+        background: transparent !important;
+        border-top: none !important;
       }
       
       [data-theme="dark"] .control-panel {
-        background: #000000 !important;
-        border-top: 1px solid rgba(255,255,255,0.08) !important;
+        background: transparent !important;
+        border-top: none !important;
       }
 
       .input-wrapper {
-        padding: 0 !important;
-        border-radius: 0 !important;
-        border: none !important;
-        box-shadow: none !important;
-        background: transparent !important;
-        margin: 0 !important;
+        padding: 10px 14px !important;
+        border-radius: 26px !important;
+        border: 1px solid var(--glass-border) !important;
+        box-shadow: 0 4px 20px var(--shadow) !important;
+        background: var(--input-bg) !important;
+        margin: 0 auto !important;
         max-width: 100% !important;
         display: flex !important;
         flex-direction: row !important;
         align-items: center !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      }
+
+      [data-theme="dark"] .input-wrapper {
+        background: rgba(255, 255, 255, 0.08) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
       }
 
       #app-shell.private-mode-active .input-wrapper {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
+        background: #262626 !important;
+        border: 1px solid #404040 !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
       }
 
       .input-top-row {
@@ -2845,19 +2857,37 @@
         margin: 4px 10px 8px 10px;
         padding: 0;
         align-items: stretch;
-        background: var(--glass-bg-strong) !important;
-        border: 1px solid var(--glass-border) !important;
+        background: transparent !important;
+        border: none !important;
+        gap: 12px;
       }
       [data-theme="dark"] #chat-sidebar.collapsed .sb-main-card {
+        background: transparent !important;
+        border: none !important;
+      }
+
+      #chat-sidebar.collapsed .sb-controls-group,
+      #chat-sidebar.collapsed .sb-recents-section,
+      #chat-sidebar.collapsed .sb-profile-section {
+        background: var(--glass-bg-strong) !important;
+        border: 1px solid var(--glass-border) !important;
+        border-radius: 18px !important;
+        padding: 10px 12px !important;
+      }
+
+      [data-theme="dark"] #chat-sidebar.collapsed .sb-controls-group,
+      [data-theme="dark"] #chat-sidebar.collapsed .sb-recents-section,
+      [data-theme="dark"] #chat-sidebar.collapsed .sb-profile-section {
         background: #141414 !important;
         border: 1px solid rgba(255,255,255,0.08) !important;
       }
+
       #chat-sidebar.collapsed .sb-divider,
       #chat-sidebar.collapsed .sb-recents-section {
         display: flex;
       }
       #chat-sidebar.collapsed .sb-divider {
-        display: block;
+        display: none !important; /* Hide dividers since they are in separate boxes now */
       }
       #chat-sidebar.collapsed .sb-header-row {
         padding: 12px 14px 8px 14px;
@@ -3969,6 +3999,32 @@
         gap: 12px !important;
         justify-content: flex-start !important;
       }
+
+      /* Separate boxes for mobile drawer */
+      #chat-sidebar.mobile-open .sb-main-card {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        gap: 12px !important;
+      }
+      #chat-sidebar.mobile-open .sb-divider {
+        display: none !important;
+      }
+      #chat-sidebar.mobile-open .sb-controls-group,
+      #chat-sidebar.mobile-open .sb-recents-section,
+      #chat-sidebar.mobile-open .sb-profile-section {
+        background: var(--glass-bg-strong) !important;
+        border: 1px solid var(--glass-border) !important;
+        border-radius: 18px !important;
+        padding: 12px !important;
+      }
+      [data-theme="dark"] #chat-sidebar.mobile-open .sb-controls-group,
+      [data-theme="dark"] #chat-sidebar.mobile-open .sb-recents-section,
+      [data-theme="dark"] #chat-sidebar.mobile-open .sb-profile-section {
+        background: #141414 !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
+      }
     }
 
     /* ── Settings as bottom sheet on mobile ── */
@@ -4233,7 +4289,7 @@
     <!-- ═══ SIDEBAR HEADER ═══ -->
     <div class="sb-header-row">
       <div class="sb-logo-group">
-        <div class="sb-logo-icon">✦</div>
+        <img class="sb-logo-icon" src="/static/candle-logo.png" alt="Logo" />
         <span class="sb-logo-text sb-text-fade">Thing AI</span>
       </div>
     </div>
@@ -6979,21 +7035,41 @@ h1 {
       const appEl = document.getElementById('app');
       const appShell = document.getElementById('app-shell');
 
-      // ── VisualViewport API — Keyboard Detection ──
       // ── VisualViewport API — Keyboard Detection & Sticking ──
       if (window.visualViewport) {
         function handleViewportResize() {
-          // Strictly adhere to rule: "On scroll — bar must NOT move. Ever."
-          // Native viewport behavior on mobile (with safe-area-inset) handles docking via pure CSS.
           const messagesEl = document.getElementById('messages');
           const cp = document.querySelector('.control-panel');
-          if (messagesEl && cp) {
-             const inputHeight = cp.offsetHeight || 60;
-             // Ensure content has enough padding to not be hidden
-             messagesEl.style.paddingBottom = `${inputHeight + 20}px`;
+          if (!cp) return;
+
+          const isMobile = window.innerWidth <= 768;
+          if (!isMobile) return;
+
+          const fullHeight = window.innerHeight;
+          const viewportHeight = window.visualViewport.height;
+          const keyboardHeight = fullHeight - viewportHeight;
+
+          if (keyboardHeight > 100) {
+            // Keyboard is open — push the bar up above keyboard
+            cp.style.bottom = keyboardHeight + 'px';
+            cp.style.paddingBottom = '6px';
+            if (messagesEl) {
+              messagesEl.style.paddingBottom = (keyboardHeight + (cp.offsetHeight || 60) + 20) + 'px';
+              // Auto-scroll to bottom so user sees latest messages
+              messagesEl.scrollTop = messagesEl.scrollHeight;
+            }
+          } else {
+            // Keyboard is closed — reset
+            cp.style.bottom = '';
+            cp.style.paddingBottom = '';
+            if (messagesEl) {
+              const inputHeight = cp.offsetHeight || 60;
+              messagesEl.style.paddingBottom = (inputHeight + 20) + 'px';
+            }
           }
         }
         window.visualViewport.addEventListener('resize', handleViewportResize);
+        window.visualViewport.addEventListener('scroll', handleViewportResize);
       }
 
       // ── Blur input after send to dismiss keyboard ──
