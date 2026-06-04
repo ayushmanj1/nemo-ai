@@ -5483,25 +5483,31 @@
     let currentFetchController = null;
     let wordQueue = [];
     let isProcessingQueue = false;
+    let currentAiBubble = null;
 
-    async function processWordQueue(aiBubble) {
+    async function processWordQueue() {
       if (isProcessingQueue) return;
       isProcessingQueue = true;
 
       while (wordQueue.length > 0 || isSending) {
         if (wordQueue.length > 0) {
+          if (!currentAiBubble) {
+             removeTyping();
+             currentAiBubble = addBubble('ai', '');
+             currentAiBubble.setAttribute('data-raw', '');
+          }
           const item = wordQueue.shift();
           
           if (item.type === 'chunk') {
             // Append chunk directly. AI sends its own spaces when needed.
             // Splitting by ' ' was causing issues like "a yu" instead of "ayu".
             const chunk = item.content;
-            const tempFull = aiBubble.getAttribute('data-raw') || '';
+            const tempFull = currentAiBubble.getAttribute('data-raw') || '';
             const newFull = tempFull + chunk;
-            aiBubble.setAttribute('data-raw', newFull);
+            currentAiBubble.setAttribute('data-raw', newFull);
             
             // Apply formatting (code blocks etc)
-            aiBubble.innerHTML = formatCodeDuringStreaming(newFull);
+            currentAiBubble.innerHTML = formatCodeDuringStreaming(newFull);
             
             // Haptic feedback
             if ('vibrate' in navigator) navigator.vibrate(8);
@@ -5512,7 +5518,7 @@
             await new Promise(r => setTimeout(r, delay));
           } else if (item.type === 'reply') {
             // Direct HTML (images, etc) - show instantly
-            aiBubble.innerHTML += item.content;
+            currentAiBubble.innerHTML += item.content;
             scrollBottom();
           }
         } else {
@@ -5533,7 +5539,7 @@
         setStatus('Thing is reading your documents...', 'ai');
       }
       
-      let aiBubble = null;
+      currentAiBubble = null;
       wordQueue = [];
 
       try {
@@ -5564,23 +5570,12 @@
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         
-        // Start the reveal processor
-        if (!aiBubble) {
-          aiBubble = addBubble('ai', '');
-          aiBubble.setAttribute('data-raw', '');
-        }
-        processWordQueue(aiBubble);
+        processWordQueue();
         
         let buffer = '';
-        let firstChunkReceived = false;
 
         while (true) {
           const { value, done } = await reader.read();
-          
-          if (!firstChunkReceived) {
-              removeTyping();
-              firstChunkReceived = true;
-          }
           
           if (done) break;
           
@@ -5622,8 +5617,8 @@
           await new Promise(r => setTimeout(r, 100));
         }
 
-        if (aiBubble) {
-          const rawText = aiBubble.getAttribute('data-raw') || aiBubble.innerText || '';
+        if (currentAiBubble) {
+          const rawText = currentAiBubble.getAttribute('data-raw') || currentAiBubble.innerText || '';
           
           if (document.getElementById('app-shell').classList.contains('editor-mode-active')) {
             const blockRegex = /```(html|css|javascript|js|python|cpp|c|java|rust|go|plaintext)?\n([\s\S]*?)```/ig;
@@ -5691,9 +5686,9 @@
               </div>`;
               
               if (cleanedText) {
-                aiBubble.innerHTML = formatCodeDuringStreaming(cleanedText) + injectionNotice;
+                currentAiBubble.innerHTML = formatCodeDuringStreaming(cleanedText) + injectionNotice;
               } else {
-                aiBubble.innerHTML = injectionNotice;
+                currentAiBubble.innerHTML = injectionNotice;
               }
               
               setTimeout(() => {
