@@ -4705,16 +4705,16 @@
 
     /* AI Summary Box in All Results */
     .bm-ai-summary-box {
-      padding: 16px 20px;
-      margin-bottom: 16px;
-      border-radius: 14px;
-      background: rgba(6, 182, 212, 0.05);
-      border: 1px solid rgba(6, 182, 212, 0.3);
-      box-shadow: 0 0 20px rgba(6, 182, 212, 0.15);
+      padding: 10px 14px;
+      margin-bottom: 12px;
+      border-radius: 12px;
+      background: rgba(196, 164, 132, 0.05);
+      border: 1px solid rgba(196, 164, 132, 0.3);
+      box-shadow: 0 0 20px rgba(196, 164, 132, 0.15);
       font-family: 'DM Sans', sans-serif;
-      font-size: 14px;
+      font-size: 13px;
       color: var(--text);
-      line-height: 1.5;
+      line-height: 1.4;
       position: relative;
       overflow: hidden;
     }
@@ -4722,7 +4722,7 @@
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0; height: 2px;
-      background: linear-gradient(90deg, transparent, #06b6d4, transparent);
+      background: linear-gradient(90deg, transparent, #c4a484, transparent);
       animation: bmSummaryGlow 2s linear infinite;
     }
     @keyframes bmSummaryGlow {
@@ -4732,13 +4732,63 @@
     .bm-ai-summary-title {
       font-family: 'Syne', sans-serif;
       font-weight: 500;
-      color: #06b6d4;
+      color: #c4a484;
       margin-bottom: 8px;
       display: flex;
       align-items: center;
       gap: 6px;
     }
     .bm-ai-summary-title svg { width: 16px; height: 16px; }
+
+    .bm-ai-ask-more {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface2, rgba(0,0,0,0.05));
+      border-radius: 50px;
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      width: 25%;
+      min-width: 150px;
+    }
+    [data-theme="dark"] .bm-ai-ask-more {
+      background: rgba(255,255,255,0.05);
+    }
+    .bm-ai-ask-more input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      font-family: inherit;
+      width: 100%;
+    }
+    .bm-ai-ask-more input::placeholder {
+      color: var(--muted);
+      opacity: 0.8;
+    }
+    .bm-ai-ask-more button {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      border-radius: 6px;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .bm-ai-ask-more button:hover {
+      color: #c4a484;
+      background: rgba(196, 164, 132, 0.1);
+    }
+    .bm-ai-ask-more button svg {
+      width: 16px; height: 16px;
+    }
 
     /* Image Results */
     .bm-results-images {
@@ -8855,6 +8905,12 @@ h1 {
           <div id="bm-ai-summary-content-${tab.id}">
             <span style="color:var(--muted)">Generating short summary...</span>
           </div>
+          <div class="bm-ai-ask-more">
+            <input type="text" id="bm-ai-ask-input-${tab.id}" placeholder="Ask more ?" />
+            <button id="bm-ai-ask-btn-${tab.id}" title="Search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
         </div>
       `;
 
@@ -8879,6 +8935,75 @@ h1 {
           if (url) openUrl(url);
         });
       });
+
+      // Ask more handlers
+      const askInput = document.getElementById(`bm-ai-ask-input-${tab.id}`);
+      const askBtn = document.getElementById(`bm-ai-ask-btn-${tab.id}`);
+      if (askInput && askBtn) {
+        const handleAskMore = async () => {
+          const q = askInput.value.trim();
+          if (!q) return;
+          
+          askInput.value = ''; // clear input
+          const summaryContent = document.getElementById(`bm-ai-summary-content-${tab.id}`);
+          if (!summaryContent) return;
+          
+          // Append question to UI
+          const qEl = document.createElement('div');
+          qEl.style.marginTop = '10px';
+          qEl.style.paddingTop = '10px';
+          qEl.style.borderTop = '1px solid var(--border)';
+          qEl.innerHTML = `<div style="font-weight:600; color:var(--text); margin-bottom:4px;">Q: ${escHtml(q)}</div><div class="bm-ai-ans-stream" style="color:var(--muted)">Thinking...</div>`;
+          summaryContent.appendChild(qEl);
+          
+          const ansEl = qEl.querySelector('.bm-ai-ans-stream');
+          const context = summaryContent.innerText;
+          
+          try {
+            const response = await fetch('/speak', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ text: `Context:\n${context}\n\nUser Question:\n${q}\n\nRespond with a very short, summarized direct answer (1-2 sentences maximum).` })
+            });
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let fullText = '';
+            let buffer = '';
+
+            ansEl.innerHTML = '';
+            ansEl.style.color = 'var(--text)';
+
+            while (true) {
+              const { value, done } = await reader.read();
+              if (done) break;
+              buffer += decoder.decode(value, { stream: true });
+              const lines = buffer.split('\n');
+              buffer = lines.pop();
+
+              for (const line of lines) {
+                if (!line.trim()) continue;
+                try {
+                  const data = JSON.parse(line);
+                  if (data.chunk) { fullText += data.chunk; ansEl.innerHTML = fullText.replace(/\n/g, '<br>'); }
+                  if (data.reply) { fullText += data.reply; ansEl.innerHTML = fullText.replace(/\n/g, '<br>'); }
+                } catch(e) {}
+              }
+            }
+            
+            // Save to tab history so it persists if the user switches tabs
+            if (!tab.shortSummary) tab.shortSummary = context; 
+            tab.shortSummary += `\n<div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border)"><div style="font-weight:600; color:var(--text); margin-bottom:4px;">Q: ${escHtml(q)}</div><div style="color:var(--text)">${fullText.replace(/\\n/g, '<br>')}</div></div>`;
+            
+          } catch(err) {
+            ansEl.innerHTML = '<span style="color:var(--danger)">Error connecting to AI.</span>';
+          }
+        };
+        askBtn.addEventListener('click', handleAskMore);
+        askInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') handleAskMore();
+        });
+      }
 
       fetchShortAiSummary(tab);
     }

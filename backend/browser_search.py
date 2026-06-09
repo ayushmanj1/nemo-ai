@@ -1,23 +1,20 @@
 """
 browser_search.py — Backend search module for Thing AI Browser Mode.
-Provides web search results for All / Images / Videos tabs.
-Uses DuckDuckGo (free, no key) with optional Google CSE upgrade.
+Provides web search results for All / Images / Videos / News tabs.
+Now uses Serper (serper.dev) for 100% reliable, structured Google Search results.
 """
 
 import os
 import re
 import json
 import requests
-import traceback
-from urllib.parse import quote_plus, urlparse
+from urllib.parse import urlparse
 from dotenv import load_dotenv
 
 load_dotenv(override=True)
 
-# Optional Google Custom Search Engine keys (free tier: 100 queries/day)
-GOOGLE_CSE_API_KEY = os.getenv("GOOGLE_CSE_API_KEY", "AIzaSyDBgeEOSjS7_GAH1x88xDP9ctuFLvceuJI")
-GOOGLE_CSE_CX = os.getenv("GOOGLE_CSE_CX", "c42dbfe89250e4023")
-
+# Serper API Key from .env
+SERPER_API_KEY = os.getenv("SERPER_API_KEY", "")
 
 def _extract_favicon(url):
     """Get favicon URL for a domain."""
@@ -30,7 +27,6 @@ def _extract_favicon(url):
         pass
     return ""
 
-
 def _clean_snippet(text):
     """Clean HTML tags and extra whitespace from snippet text."""
     if not text:
@@ -39,165 +35,95 @@ def _clean_snippet(text):
     text = re.sub(r'\s+', ' ', text).strip()
     return text
 
+def _serper_search(query, search_type="all"):
+    """
+    Search using Serper API.
+    Supports: search (all), images, videos, news
+    """
+    if not SERPER_API_KEY:
+        print("[BrowserSearch] No SERPER_API_KEY found.")
+        return []
 
-# ═══════════════════════════════════════════════════════
-# DuckDuckGo Search (Free, No API Key)
-# ═══════════════════════════════════════════════════════
+    # Map search_type to Serper endpoint
+    endpoint_map = {
+        "all": "search",
+        "images": "images",
+        "videos": "videos",
+        "news": "news"
+    }
+    
+    endpoint = endpoint_map.get(search_type, "search")
+    url = f"https://google.serper.dev/{endpoint}"
+    
+    payload = json.dumps({
+        "q": query,
+        "num": 20 if search_type in ["images", "videos"] else 15
+    })
+    
+    headers = {
+        'X-API-KEY': SERPER_API_KEY,
+        'Content-Type': 'application/json'
+    }
 
-def _ddg_search_all(query, max_results=20):
-    """Search DuckDuckGo for web results."""
-    results = []
     try:
-        from duckduckgo_search import DDGS
-        with DDGS() as ddgs:
-            for r in ddgs.text(query, max_results=max_results):
-                results.append({
-                    "title": r.get("title", ""),
-                    "url": r.get("href", ""),
-                    "snippet": _clean_snippet(r.get("body", "")),
-                    "source": urlparse(r.get("href", "")).netloc,
-                    "favicon": _extract_favicon(r.get("href", "")),
-                })
-    except Exception as e:
-        print(f"[BrowserSearch] DDG text error: {e}")
-    return results
-
-
-def _ddg_search_images(query, max_results=30):
-    """Search DuckDuckGo for image results."""
-    results = []
-    try:
-        from duckduckgo_search import DDGS
-        with DDGS() as ddgs:
-            for r in ddgs.images(query, max_results=max_results):
-                results.append({
-                    "title": r.get("title", ""),
-                    "url": r.get("url", ""),          # page URL
-                    "image": r.get("image", ""),       # direct image URL
-                    "thumbnail": r.get("thumbnail", r.get("image", "")),
-                    "source": r.get("source", urlparse(r.get("url", "")).netloc),
-                    "width": r.get("width", 0),
-                    "height": r.get("height", 0),
-                })
-    except Exception as e:
-        print(f"[BrowserSearch] DDG images error: {e}")
-    return results
-
-
-def _ddg_search_videos(query, max_results=20):
-    """Search DuckDuckGo for video results."""
-    results = []
-    try:
-        from duckduckgo_search import DDGS
-        with DDGS() as ddgs:
-            for r in ddgs.videos(query, max_results=max_results):
-                # Extract thumbnail
-                images = r.get("images", {})
-                thumbnail = ""
-                if isinstance(images, dict):
-                    thumbnail = images.get("large", images.get("medium", images.get("small", "")))
-                elif isinstance(images, str):
-                    thumbnail = images
-
-                results.append({
-                    "title": r.get("title", ""),
-                    "url": r.get("content", ""),       # video URL
-                    "thumbnail": thumbnail,
-                    "source": r.get("publisher", urlparse(r.get("content", "")).netloc),
-                    "duration": r.get("duration", ""),
-                    "description": _clean_snippet(r.get("description", "")),
-                    "published": r.get("published", ""),
-                })
-    except Exception as e:
-        print(f"[BrowserSearch] DDG videos error: {e}")
-    return results
-
-
-def _ddg_search_news(query, max_results=20):
-    """Search DuckDuckGo for news results."""
-    results = []
-    try:
-        from duckduckgo_search import DDGS
-        with DDGS() as ddgs:
-            for r in ddgs.news(query, max_results=max_results):
-                results.append({
-                    "title": r.get("title", ""),
-                    "url": r.get("url", ""),
-                    "snippet": _clean_snippet(r.get("body", "")),
-                    "source": r.get("source", urlparse(r.get("url", "")).netloc),
-                    "published": r.get("date", ""),
-                    "image": r.get("image", "")
-                })
-    except Exception as e:
-        print(f"[BrowserSearch] DDG news error: {e}")
-    return results
-
-
-# ═══════════════════════════════════════════════════════
-# Google Custom Search (Optional, 100 free queries/day)
-# ═══════════════════════════════════════════════════════
-
-def _google_cse_search(query, search_type="all", max_results=10):
-    """Search using Google Custom Search Engine API."""
-    if not GOOGLE_CSE_API_KEY or not GOOGLE_CSE_CX:
-        return None  # Signal to use DDG fallback
-
-    results = []
-    try:
-        params = {
-            "key": GOOGLE_CSE_API_KEY,
-            "cx": GOOGLE_CSE_CX,
-            "q": query,
-            "num": min(max_results, 10),
-        }
-
-        if search_type == "images":
-            params["searchType"] = "image"
-        elif search_type == "videos":
-            params["q"] = f"{query} site:youtube.com OR site:vimeo.com"
-
-        resp = requests.get(
-            "https://www.googleapis.com/customsearch/v1",
-            params=params,
-            timeout=8
-        )
-
-        if resp.status_code != 200:
-            print(f"[BrowserSearch] Google CSE HTTP {resp.status_code}")
-            return None
-
-        data = resp.json()
-        items = data.get("items", [])
-
-        for item in items:
-            if search_type == "images":
-                img_info = item.get("image", {})
-                results.append({
-                    "title": item.get("title", ""),
-                    "url": item.get("image", {}).get("contextLink", ""),
-                    "image": item.get("link", ""),
-                    "thumbnail": img_info.get("thumbnailLink", item.get("link", "")),
-                    "source": urlparse(item.get("displayLink", "")).netloc or item.get("displayLink", ""),
-                    "width": img_info.get("width", 0),
-                    "height": img_info.get("height", 0),
-                })
-            else:
+        response = requests.post(url, headers=headers, data=payload, timeout=10)
+        if response.status_code != 200:
+            print(f"[BrowserSearch] Serper API Error {response.status_code}: {response.text}")
+            return []
+            
+        data = response.json()
+        results = []
+        
+        if search_type == "all":
+            for item in data.get("organic", []):
                 results.append({
                     "title": item.get("title", ""),
                     "url": item.get("link", ""),
                     "snippet": _clean_snippet(item.get("snippet", "")),
-                    "source": item.get("displayLink", ""),
-                    "favicon": _extract_favicon(item.get("link", "")),
+                    "source": urlparse(item.get("link", "")).netloc,
+                    "favicon": _extract_favicon(item.get("link", ""))
                 })
-
-        print(f"[BrowserSearch] Google CSE returned {len(results)} results for '{query}' ({search_type})")
+                
+        elif search_type == "images":
+            for item in data.get("images", []):
+                results.append({
+                    "title": item.get("title", ""),
+                    "url": item.get("link", ""),          # the website page
+                    "image": item.get("imageUrl", ""),    # the direct image
+                    "thumbnail": item.get("thumbnailUrl", item.get("imageUrl", "")),
+                    "source": item.get("source", urlparse(item.get("link", "")).netloc),
+                    "width": item.get("imageWidth", 0),
+                    "height": item.get("imageHeight", 0)
+                })
+                
+        elif search_type == "videos":
+            for item in data.get("videos", []):
+                results.append({
+                    "title": item.get("title", ""),
+                    "url": item.get("link", ""),          # the video link (e.g. youtube)
+                    "thumbnail": item.get("imageUrl", ""), # video thumbnail
+                    "source": item.get("source", urlparse(item.get("link", "")).netloc),
+                    "duration": item.get("duration", ""),
+                    "description": _clean_snippet(item.get("snippet", "")),
+                    "published": item.get("date", "")
+                })
+                
+        elif search_type == "news":
+            for item in data.get("news", []):
+                results.append({
+                    "title": item.get("title", ""),
+                    "url": item.get("link", ""),
+                    "snippet": _clean_snippet(item.get("snippet", "")),
+                    "source": item.get("source", urlparse(item.get("link", "")).netloc),
+                    "published": item.get("date", ""),
+                    "image": item.get("imageUrl", "")
+                })
+                
+        return results
 
     except Exception as e:
-        print(f"[BrowserSearch] Google CSE error: {e}")
-        return None
-
-    return results
-
+        print(f"[BrowserSearch] Serper API Exception: {e}")
+        return []
 
 # ═══════════════════════════════════════════════════════
 # Main Search Function
@@ -209,7 +135,7 @@ def browser_search(query, search_type="all"):
     
     Args:
         query: Search query string
-        search_type: "all", "images", or "videos"
+        search_type: "all", "images", "videos", or "news"
     
     Returns:
         List of result dicts
@@ -218,24 +144,9 @@ def browser_search(query, search_type="all"):
     if not query:
         return []
 
-    print(f"[BrowserSearch] 🔍 Searching: '{query}' (type: {search_type})")
-
-    # Try Google CSE first (if keys are configured)
-    results = _google_cse_search(query, search_type)
-
-    # Fall back to DuckDuckGo (free, always available)
-    if results is None or len(results) == 0:
-        print(f"[BrowserSearch] Using DuckDuckGo fallback")
-        if search_type == "all":
-            results = _ddg_search_all(query, max_results=20)
-        elif search_type == "images":
-            results = _ddg_search_images(query, max_results=30)
-        elif search_type == "videos":
-            results = _ddg_search_videos(query, max_results=20)
-        elif search_type == "news":
-            results = _ddg_search_news(query, max_results=20)
-        else:
-            results = _ddg_search_all(query, max_results=20)
-
+    print(f"[BrowserSearch] 🔍 Searching via Serper: '{query}' (type: {search_type})")
+    
+    results = _serper_search(query, search_type)
+    
     print(f"[BrowserSearch] ✅ Returning {len(results)} results")
     return results
