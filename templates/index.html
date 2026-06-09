@@ -4975,6 +4975,31 @@
       display: none !important;
     }
 
+    /* Sidebar browser mode button animation */
+    @keyframes sbBrowserGlobeRotate {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.15) rotate(15deg); }
+      100% { transform: scale(1.15); color: var(--sb-accent); }
+    }
+    #sb-browser-mode-btn:hover svg {
+      animation: sbBrowserGlobeRotate 0.4s forwards;
+    }
+
+    /* Hide header browser mode button on desktop (PC) only - keep on mobile */
+    @media (min-width: 1025px) {
+      #browser-mode-toggle-btn {
+        display: none !important;
+      }
+    }
+
+    /* Remove outline/border from browser mode button on mobile */
+    @media (max-width: 1024px) {
+      #browser-mode-toggle-btn {
+        border: none !important;
+        background: transparent !important;
+      }
+    }
+
     /* Browser toggle button animation */
     @keyframes bmGlobeRotate {
       0% { transform: scale(1); }
@@ -5280,6 +5305,14 @@
             <span class="code-easter-text"></span>
           </div>
           <span class="sb-ctrl-label sb-text-fade">Code Editor</span>
+        </button>
+        <button class="sb-ctrl-btn" id="sb-browser-mode-btn" title="Browser Mode">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+          <span class="sb-ctrl-label sb-text-fade">Browser Mode</span>
         </button>
         <button class="sb-ctrl-btn" id="sb-settings-icon" title="Settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
@@ -8545,6 +8578,26 @@ h1 {
       isOpen ? closeBrowserMode() : openBrowserMode();
     });
     closeBtn.addEventListener('click', closeBrowserMode);
+
+    // ── Sidebar Browser Mode Button ──
+    const sbBrowserBtn = document.getElementById('sb-browser-mode-btn');
+    if (sbBrowserBtn) {
+      sbBrowserBtn.addEventListener('click', () => {
+        if ('vibrate' in navigator) navigator.vibrate(12);
+        if (!isOpen) {
+          openBrowserMode();
+          // Close sidebar on mobile after opening browser mode
+          if (window.innerWidth <= 1024) {
+            const sidebar = document.getElementById('chat-sidebar');
+            const sbOverlay = document.getElementById('sb-overlay');
+            if (sidebar) sidebar.classList.remove('mobile-open');
+            if (sbOverlay) sbOverlay.classList.remove('active');
+            document.body.classList.remove('sidebar-open');
+            document.body.style.overflow = '';
+          }
+        }
+      });
+    }
 
     // ── Browser Mode Mobile Hamburger ──
     const bmMobileTrigger = document.getElementById('bm-mobile-trigger');
