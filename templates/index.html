@@ -2019,6 +2019,22 @@
         transition: bottom 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
       }
 
+      .control-panel::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(to bottom, transparent 0%, var(--bg) 90%);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        mask-image: linear-gradient(to bottom, transparent 0%, black 30%);
+        -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 30%);
+        z-index: -1;
+        pointer-events: none;
+      }
+
       #app-shell.private-mode-active .control-panel {
         background: transparent !important;
         border-top: none !important;
@@ -4997,6 +5013,7 @@
       #browser-mode-toggle-btn {
         border: none !important;
         background: transparent !important;
+        margin-right: -10px !important;
       }
     }
 
