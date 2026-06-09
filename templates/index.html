@@ -542,6 +542,19 @@
     }
 
     .sb-capsule-text { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; min-width: 0; }
+    .sb-capsule-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+      color: var(--muted);
+    }
+    .sb-capsule-icon svg {
+      width: 16px;
+      height: 16px;
+    }
     .sb-capsule-options {
       opacity: 0; width: 22px; height: 22px;
       border: none; background: transparent; color: var(--text-muted);
@@ -733,6 +746,12 @@
       display: flex; flex-direction: column; height: 100dvh;
       width: 100%; max-width: none; margin: 0; padding: 0 24px;
       transition: flex 0.4s cubic-bezier(0.25, 1, 0.5, 1), width 0.4s cubic-bezier(0.25, 1, 0.5, 1), margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow-x: hidden; /* Prevent horizontal scroll on main app */
+    }
+    
+    /* Disable transitions when browser mode is active to prevent glitches */
+    #app-shell.browser-mode-on #app {
+      transition: none !important;
     }
 
     /* ── Mobile overlay ── */
@@ -855,6 +874,7 @@
       color: var(--text);
       font-family: 'DM Sans', sans-serif;
       overflow: hidden;
+      overflow-x: hidden; /* Explicitly prevent horizontal scroll */
       user-select: none;
     }
 
@@ -4274,6 +4294,945 @@
       #pull-cord-wrap { right: 15px; }
     }
 
+    /* ══════════════════════════════════════════════════════════════
+       BROWSER MODE — Styles
+    ══════════════════════════════════════════════════════════════ */
+    #browser-mode-panel {
+      position: relative;
+      flex: 1;
+      z-index: 10;
+      background: var(--bg);
+      display: none;
+      flex-direction: column;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+      will-change: opacity;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      max-width: 100%;
+      overflow: hidden;
+    }
+    #browser-mode-panel.active {
+      display: flex;
+      opacity: 1;
+    }
+    
+    /* Mobile optimizations - prevent glitches */
+    @media (max-width: 1024px) {
+      #browser-mode-panel {
+        transition: opacity 0.2s ease;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        -webkit-perspective: 1000;
+        perspective: 1000;
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+      }
+      
+      /* Ensure clean transitions on mobile */
+      #app-shell.browser-mode-on #app {
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+      }
+    }
+
+    /* Browser Top Bar */
+    .bm-topbar {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      gap: 8px;
+      background: transparent;
+      border-bottom: none;
+      flex-shrink: 0;
+      z-index: 10;
+      max-width: 100%;
+      overflow: hidden;
+    }
+    .bm-tabs-scroll {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      flex: 1;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      min-width: 0; /* Allow flex item to shrink below content size */
+      max-width: 100%; /* Prevent expanding beyond container */
+    }
+    .bm-tabs-scroll::-webkit-scrollbar { display: none; }
+    .bm-tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      max-width: 180px;
+      min-width: 80px;
+      flex-shrink: 0;
+    }
+    .bm-tab:hover { background: var(--hover-bg); color: var(--text); }
+    .bm-tab.active {
+      background: var(--bg);
+      color: var(--text);
+      border-color: var(--accent);
+      font-weight: 500;
+    }
+    .bm-tab-title {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+    .bm-tab-close {
+      width: 16px; height: 16px;
+      border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0.4;
+      cursor: pointer;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .bm-tab-close:hover { opacity: 1; background: rgba(239,68,68,0.15); color: #ef4444; }
+    .bm-tab-close svg { width: 12px; height: 12px; }
+    .bm-tab-star {
+      width: 16px; height: 16px;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0.3; cursor: pointer; transition: all 0.15s; flex-shrink: 0;
+    }
+    .bm-tab-star:hover { opacity: 1; color: #fbbf24; }
+    .bm-tab-star.active { opacity: 1; color: #f59e0b; }
+    .bm-tab-star svg { width: 14px; height: 14px; }
+    .bm-add-tab {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+    }
+    .bm-add-tab:hover { background: var(--hover-bg); color: var(--accent); border-color: var(--accent); }
+    .bm-add-tab svg { width: 16px; height: 16px; }
+    .bm-topbar-actions {
+      display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+    }
+    .bm-top-btn {
+      width: 34px; height: 34px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--muted);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .bm-top-btn:hover { background: var(--hover-bg); color: var(--text); }
+    .bm-top-btn.private-active { background: rgba(139,92,246,0.15); border-color: #a855f7; color: #a855f7; }
+    .bm-top-btn svg { width: 16px; height: 16px; }
+    .bm-close-btn:hover { background: rgba(239,68,68,0.1); color: #ef4444; border-color: #ef4444; }
+
+    /* Apps Menu */
+    .bm-apps-menu {
+      position: absolute;
+      top: 48px;
+      right: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      width: 260px;
+      box-shadow: 0 10px 30px var(--shadow);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-10px);
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 100;
+    }
+    .bm-apps-menu.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+    .bm-app-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 12px;
+      transition: background 0.2s;
+    }
+    .bm-app-item:hover {
+      background: var(--hover-bg);
+    }
+    .bm-app-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 600;
+      font-family: 'Syne', sans-serif;
+    }
+    .bm-app-name {
+      font-size: 12px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      text-align: center;
+    }
+
+    /* URL Bar */
+    .bm-url-bar {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .bm-url-bar.visible { display: flex; }
+    .bm-nav-btn {
+      width: 30px; height: 30px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .bm-nav-btn:hover { background: var(--hover-bg); color: var(--text); }
+    .bm-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .bm-nav-btn svg { width: 16px; height: 16px; }
+    .bm-url-display {
+      flex: 1;
+      padding: 7px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .bm-url-display .bm-url-secure {
+      color: #10b981;
+      margin-right: 4px;
+    }
+
+    /* Section Tabs (All / Images / Videos / AI) */
+    .bm-section-tabs {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 0 16px;
+      background: transparent;
+      border-bottom: none;
+      flex-shrink: 0;
+    }
+    .bm-section-tab {
+      padding: 12px 20px;
+      font-size: 14px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 400;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+    }
+    .bm-section-tab:hover { color: var(--text); }
+    .bm-section-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      font-weight: 500;
+    }
+
+    /* Results Container */
+    .bm-content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 80px;
+    }
+    .bm-content::-webkit-scrollbar { width: 4px; }
+    .bm-content::-webkit-scrollbar-track { background: transparent; }
+    .bm-content::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
+
+    /* Welcome / New Tab Page */
+    .bm-welcome {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      padding: 60px 24px;
+      text-align: center;
+    }
+    .bm-welcome-icon {
+      width: 64px; height: 64px;
+      background: linear-gradient(135deg, #06b6d4, #3b82f6);
+      border-radius: 18px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 30px rgba(6,182,212,0.3);
+    }
+    .bm-welcome-icon svg { width: 32px; height: 32px; color: #fff; }
+    .bm-welcome h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 400;
+      margin-bottom: 8px;
+    }
+    .bm-welcome p {
+      color: var(--muted);
+      font-size: 0.95rem;
+      max-width: 400px;
+    }
+
+    /* Loading State */
+    .bm-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 24px;
+      gap: 16px;
+    }
+    .bm-spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: bmSpin 0.8s linear infinite;
+    }
+    @keyframes bmSpin {
+      to { transform: rotate(360deg); }
+    }
+    .bm-loading-text {
+      font-size: 14px; color: var(--muted);
+      font-family: 'Syne', sans-serif;
+    }
+
+    /* All Results */
+    .bm-results-all {
+      padding: 16px 24px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .bm-result-card {
+      padding: 16px;
+      border-radius: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .bm-result-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    }
+    [data-theme="dark"] .bm-result-card:hover {
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    }
+    .bm-result-source {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .bm-result-source img {
+      width: 16px; height: 16px; border-radius: 4px;
+    }
+    .bm-result-source span {
+      font-size: 12px;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+    }
+    .bm-result-title {
+      font-size: 16px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 500;
+      color: var(--accent);
+      margin-bottom: 4px;
+      line-height: 1.3;
+    }
+    .bm-result-title:hover { text-decoration: underline; }
+    .bm-result-snippet {
+      font-size: 13.5px;
+      color: var(--muted);
+      line-height: 1.5;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    /* AI Summary Box in All Results */
+    .bm-ai-summary-box {
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      border-radius: 14px;
+      background: rgba(6, 182, 212, 0.05);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.15);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.5;
+      position: relative;
+      overflow: hidden;
+    }
+    .bm-ai-summary-box::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, #06b6d4, transparent);
+      animation: bmSummaryGlow 2s linear infinite;
+    }
+    @keyframes bmSummaryGlow {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+    .bm-ai-summary-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 500;
+      color: #06b6d4;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .bm-ai-summary-title svg { width: 16px; height: 16px; }
+
+    /* Image Results */
+    .bm-results-images {
+      padding: 16px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px;
+    }
+    .bm-image-card {
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .bm-image-card:hover {
+      transform: scale(1.02);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+      border-color: var(--accent);
+    }
+    .bm-image-card img {
+      width: 100%; height: 140px; object-fit: cover; display: block;
+      background: var(--surface2);
+    }
+    .bm-image-card-info {
+      padding: 8px 10px;
+    }
+    .bm-image-card-info span {
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
+    }
+
+    /* Video Results */
+    .bm-results-videos {
+      padding: 16px 24px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .bm-video-card {
+      display: flex;
+      gap: 14px;
+      padding: 12px;
+      border-radius: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .bm-video-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    }
+    .bm-video-thumb {
+      width: 160px; height: 90px;
+      border-radius: 10px;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: var(--surface2);
+      position: relative;
+    }
+    .bm-video-thumb img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .bm-video-duration {
+      position: absolute;
+      bottom: 6px; right: 6px;
+      background: rgba(0,0,0,0.8);
+      color: #fff;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .bm-video-info {
+      flex: 1; min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+    }
+    .bm-video-title {
+      font-size: 15px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 500;
+      color: var(--text);
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .bm-video-meta {
+      font-size: 12px;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    /* AI Research Panel */
+    .bm-ai-panel {
+      padding: 16px 24px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .bm-ai-prompt {
+      padding: 14px 18px;
+      border-radius: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .bm-ai-response {
+      padding: 18px;
+      border-radius: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.65;
+    }
+
+    /* Iframe Wrapper */
+    .bm-iframe-wrap {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+    }
+    .bm-iframe-wrap.visible { display: flex; }
+    .bm-iframe-wrap iframe {
+      flex: 1;
+      width: 100%;
+      border: none;
+      background: #fff;
+    }
+    .bm-iframe-error {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 24px;
+      gap: 16px;
+      text-align: center;
+    }
+    .bm-iframe-error svg { width: 48px; height: 48px; color: var(--muted); }
+    .bm-iframe-error h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 500;
+    }
+    .bm-iframe-error p {
+      color: var(--muted);
+      font-size: 14px;
+      max-width: 400px;
+    }
+    .bm-iframe-error button {
+      padding: 10px 24px;
+      border-radius: 12px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .bm-iframe-error button:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+    /* No results */
+    .bm-no-results {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 24px;
+      gap: 12px;
+      text-align: center;
+    }
+    .bm-no-results svg { width: 40px; height: 40px; color: var(--muted); opacity: 0.5; }
+    .bm-no-results p { color: var(--muted); font-size: 14px; }
+
+    /* Browser Mode UI Override */
+    #app-shell.browser-mode-on #app { 
+      display: none !important;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
+    }
+    #app-shell.browser-mode-on #editor-panel { display: none; }
+    #app-shell.browser-mode-on #output-panel { display: none; }
+    
+    /* Keep sidebar visible and functional in browser mode (like PC mode) */
+    #app-shell.browser-mode-on #chat-sidebar {
+      display: flex !important;
+      position: relative;
+      z-index: 100;
+      /* On desktop, sidebar behaves normally - visible and collapsible */
+    }
+    
+    /* Ensure browser panel doesn't overlap sidebar on desktop */
+    #app-shell.browser-mode-on #browser-mode-panel {
+      z-index: 10; /* Lower than sidebar */
+    }
+    
+    /* On mobile, sidebar becomes a drawer in browser mode too */
+    @media (max-width: 1024px) {
+      #app-shell.browser-mode-on #chat-sidebar {
+        position: fixed !important;
+        transform: translateX(-100%) !important;
+        z-index: 200 !important; /* Higher on mobile for drawer effect */
+      }
+      
+      #app-shell.browser-mode-on #chat-sidebar.mobile-open {
+        transform: translateX(0) !important;
+      }
+    }
+    
+    /* Adapt Sidebar for Browser Mode */
+    #app-shell.browser-mode-on #sb-code-editor-icon { display: none !important; }
+    #app-shell.browser-mode-on #sb-new-chat-icon .sb-ctrl-label { font-size: 0; }
+    #app-shell.browser-mode-on #sb-new-chat-icon .sb-ctrl-label::after {
+      content: "New Tab";
+      font-size: 14px;
+    }
+    #app-shell.browser-mode-on #sb-chats-container { display: none !important; }
+    #app-shell.browser-mode-on #sb-bm-tabs-container { display: flex !important; flex-direction: column; gap: 8px; }
+    
+    /* Add more vertical padding to browser mode tabs in sidebar */
+    #app-shell.browser-mode-on #sb-bm-tabs-container .sb-capsule {
+      padding: 10px 10px;
+      min-height: 44px;
+    }
+
+    /* Hide apps button (dots icon) in browser mode */
+    #bm-apps-btn {
+      display: none !important;
+    }
+
+    /* Browser toggle button animation */
+    @keyframes bmGlobeRotate {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2) rotate(15deg); }
+      100% { transform: scale(1.15); color: var(--sb-accent); }
+    }
+    #browser-mode-toggle-btn:hover svg {
+      animation: bmGlobeRotate 0.4s forwards;
+    }
+    #browser-mode-toggle-btn.bm-active {
+      background: rgba(6,182,212,0.15) !important;
+      border-color: var(--accent) !important;
+      color: var(--accent) !important;
+    }
+
+    /* Mobile Hamburger in Browser Mode (only visible on mobile) */
+    #bm-mobile-trigger {
+      display: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+      touch-action: manipulation;
+      position: relative;
+      overflow: hidden;
+      margin-right: 4px;
+    }
+
+    #bm-mobile-trigger:hover,
+    #bm-mobile-trigger:active {
+      background: var(--hover-bg);
+      color: var(--text);
+    }
+
+    #bm-mobile-trigger:active {
+      transform: scale(0.92);
+      transition: transform 0.08s ease;
+    }
+
+    #bm-mobile-trigger svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Show hamburger only on mobile/tablet in browser mode */
+    @media (max-width: 1024px) {
+      #bm-mobile-trigger {
+        display: flex;
+      }
+      
+      /* Adjust topbar padding when hamburger is visible */
+      .bm-topbar {
+        padding: 8px 8px 8px 4px;
+      }
+    }
+
+    /* Mobile-specific browser mode tab scrolling */
+    @media (max-width: 768px) {
+      .bm-topbar {
+        gap: 6px;
+        padding: 8px 6px 8px 4px;
+      }
+      
+      .bm-tabs-scroll {
+        flex: 1 1 0%; /* Allow it to grow from 0 basis */
+        min-width: 0; /* Allow shrinking below content size */
+        overflow-x: auto; /* Ensure horizontal scroll */
+      }
+      
+      .bm-tab {
+        max-width: 140px;
+        min-width: 100px;
+        padding: 6px 10px;
+        font-size: 12px;
+      }
+      
+      .bm-topbar-actions {
+        gap: 4px;
+        flex-shrink: 0; /* Prevent actions from shrinking */
+      }
+      
+      .bm-top-btn {
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0;
+      }
+      
+      .bm-add-tab {
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0; /* Prevent add button from shrinking */
+      }
+    }
+
+    @media (max-width: 480px) {
+      .bm-topbar {
+        gap: 4px;
+      }
+      
+      .bm-tabs-scroll {
+        flex: 1 1 0%;
+        min-width: 0;
+      }
+      
+      .bm-tab {
+        max-width: 120px;
+        min-width: 80px;
+        padding: 6px 8px;
+        gap: 6px;
+      }
+      
+      .bm-topbar-actions {
+        gap: 3px;
+      }
+      
+      .bm-top-btn {
+        width: 30px;
+        height: 30px;
+        flex-shrink: 0;
+      }
+      
+      .bm-add-tab {
+        width: 30px;
+        height: 30px;
+        flex-shrink: 0;
+      }
+    }
+
+    /* Bottom Search Bar in Browser Mode */
+    .bm-bottom-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 10px 16px 24px;
+      display: flex;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      z-index: 20;
+      pointer-events: none;
+    }
+    
+    /* Mobile: Move search bar closer to bottom */
+    @media (max-width: 768px) {
+      .bm-bottom-bar {
+        padding: 10px 12px 12px;
+        bottom: env(safe-area-inset-bottom, 0px);
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .bm-bottom-bar {
+        padding: 8px 10px 10px;
+        bottom: max(env(safe-area-inset-bottom, 0px), 8px);
+      }
+    }
+    .bm-search-input-wrap {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      max-width: 680px;
+      padding: 10px 18px;
+      background: var(--input-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      transition: all 0.3s;
+      box-shadow: 0 6px 24px var(--shadow);
+      gap: 10px;
+      pointer-events: auto;
+    }
+    
+    /* Mobile: Make search bar more compact */
+    @media (max-width: 768px) {
+      .bm-search-input-wrap {
+        padding: 8px 14px;
+        max-width: calc(100% - 24px);
+      }
+    }
+    [data-theme="dark"] .bm-search-input-wrap {
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(20px);
+    }
+    .bm-search-input-wrap:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 10px 30px rgba(6,182,212,0.15);
+    }
+    .bm-search-icon { color: var(--muted); flex-shrink: 0; }
+    .bm-search-icon svg { width: 18px; height: 18px; }
+    #bm-search-input {
+      flex: 1;
+      border: none !important;
+      background: transparent !important;
+      outline: none !important;
+      box-shadow: none !important;
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      color: var(--text);
+    }
+    #bm-search-input::placeholder { color: var(--muted); opacity: 0.6; }
+    .bm-search-submit {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+    }
+    .bm-search-submit:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .bm-search-submit svg { width: 16px; height: 16px; }
+
+    /* Private mode styling in browser mode */
+    #browser-mode-panel.bm-private .bm-search-input-wrap {
+      background: #000;
+      border-color: #333;
+    }
+    #browser-mode-panel.bm-private #bm-search-input,
+    #browser-mode-panel.bm-private .bm-search-icon {
+      color: #fff;
+    }
+    #browser-mode-panel.bm-private .bm-search-submit {
+      background: #333;
+      border-color: #444;
+      color: #e5e5e5;
+    }
+    #browser-mode-panel.bm-private .bm-search-submit:hover {
+      background: #4a4a4a;
+      color: #fff;
+    }
+    .bm-welcome h2, .bm-welcome p {
+      transition: opacity 0.3s ease;
+    }
+    #app-shell.bm-private-on .sb-recents-section {
+      display: none !important;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .bm-results-all { padding: 12px 14px; }
+      .bm-result-card { padding: 12px; }
+      .bm-result-title { font-size: 15px; }
+      .bm-results-images { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); padding: 10px; }
+      .bm-video-card { flex-direction: column; }
+      .bm-video-thumb { width: 100%; height: 160px; }
+      .bm-section-tab { padding: 10px 14px; font-size: 13px; }
+      .bm-tab { padding: 6px 10px; font-size: 12px; max-width: 120px; }
+      .bm-search-input-wrap { padding: 8px 14px; }
+      #bm-search-input { font-size: 16px !important; }
+    }
+
   </style>
 </head>
 
@@ -4344,6 +5303,9 @@
         <div class="sb-recents-header">Recent</div>
         <div class="sb-recents-list" id="sb-chats-container">
           <div class="sb-empty-state">No chats yet.<br>Start a new conversation!</div>
+        </div>
+        <div class="sb-recents-list" id="sb-bm-tabs-container" style="display: none;">
+          <div class="sb-empty-state">No tabs yet.<br>Start searching!</div>
         </div>
       </div>
 
@@ -4612,6 +5574,15 @@
 
       <div class="header-actions">
 
+        <button class="icon-btn" id="browser-mode-toggle-btn" title="Browser Mode">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+        </button>
+
+
         <button class="icon-btn" id="privacy-toggle-btn" title="Private Mode" style="margin-right: 15px;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 2">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -4756,6 +5727,113 @@
     </div>
 
   </div><!-- /#app -->
+
+  <!-- ═══════════════════════════════════════════════
+       BROWSER MODE PANEL
+  ═══════════════════════════════════════════════ -->
+  <div id="browser-mode-panel">
+    <!-- Top Bar: Tabs + Actions -->
+    <div class="bm-topbar">
+      <!-- Mobile Hamburger (only visible on mobile) -->
+      <button id="bm-mobile-trigger" title="Open Sidebar" aria-label="Toggle sidebar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="9" y1="3" x2="9" y2="21"></line>
+        </svg>
+      </button>
+      <div class="bm-tabs-scroll" id="bm-tabs-container">
+        <!-- Tabs injected by JS -->
+      </div>
+      <button class="bm-add-tab" id="bm-add-tab-btn" title="New Tab">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+      <div class="bm-topbar-actions" style="position: relative;">
+        <button class="bm-top-btn" id="bm-apps-btn" title="Apps">
+          <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
+        </button>
+        <div class="bm-apps-menu" id="bm-apps-menu">
+          <div class="bm-app-item" data-url="https://mail.google.com">
+            <div class="bm-app-icon" style="background: #ea4335; color: #fff;">M</div>
+            <div class="bm-app-name">Gmail</div>
+          </div>
+          <div class="bm-app-item" data-url="https://youtube.com">
+            <div class="bm-app-icon" style="background: #ff0000; color: #fff;">▶</div>
+            <div class="bm-app-name">YouTube</div>
+          </div>
+          <div class="bm-app-item" data-url="https://keep.google.com">
+            <div class="bm-app-icon" style="background: #fbbc04; color: #fff;">📝</div>
+            <div class="bm-app-name">Notes</div>
+          </div>
+          <div class="bm-app-item" data-url="https://google.com">
+            <div class="bm-app-icon" style="background: #4285f4; color: #fff;">G</div>
+            <div class="bm-app-name">Google</div>
+          </div>
+        </div>
+        <button class="bm-top-btn" id="bm-private-toggle" title="Private Mode">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </button>
+        <button class="bm-top-btn bm-close-btn" id="bm-close-btn" title="Exit Browser Mode">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- URL Bar (shown when viewing a site) -->
+    <div class="bm-url-bar" id="bm-url-bar">
+      <button class="bm-nav-btn" id="bm-back-btn" title="Back" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <button class="bm-nav-btn" id="bm-forward-btn" title="Forward" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <button class="bm-nav-btn" id="bm-refresh-btn" title="Refresh">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      </button>
+      <div class="bm-url-display" id="bm-url-display">
+        <span class="bm-url-secure">🔒</span>
+        <span id="bm-url-text">about:newtab</span>
+      </div>
+    </div>
+
+    <!-- Section Tabs -->
+    <div class="bm-section-tabs" id="bm-section-tabs">
+      <div class="bm-section-tab active" data-section="all">All</div>
+      <div class="bm-section-tab" data-section="images">Images</div>
+      <div class="bm-section-tab" data-section="videos">Videos</div>
+      <div class="bm-section-tab" data-section="news">News</div>
+      <div class="bm-section-tab" data-section="ai">AI</div>
+    </div>
+
+    <!-- Content Area -->
+    <div class="bm-content" id="bm-content">
+      <div class="bm-welcome" id="bm-welcome">
+        <div class="bm-welcome-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        </div>
+        <h2>Browse the web</h2>
+        <p>Search anything below. Results will appear with clickable links, images, videos, and AI-powered research.</p>
+      </div>
+    </div>
+
+    <!-- Iframe Wrapper (for loading websites) -->
+    <div class="bm-iframe-wrap" id="bm-iframe-wrap">
+      <iframe id="bm-iframe" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+    </div>
+
+    <!-- Bottom Search Bar -->
+    <div class="bm-bottom-bar">
+      <div class="bm-search-input-wrap">
+        <div class="bm-search-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <input type="search" id="bm-search-input" placeholder="Search the web..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+        <button class="bm-search-submit" id="bm-search-submit" title="Search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
   </div><!-- /#app-shell -->
 
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
@@ -6478,7 +7556,15 @@ IMPORTANT RULES FOR CODING:
         }
       });
 
-      sbNewChatIcon.addEventListener('click', (e) => { e.stopPropagation(); createNewChat(); });
+      sbNewChatIcon.addEventListener('click', (e) => { 
+        e.stopPropagation(); 
+        if (document.getElementById('app-shell').classList.contains('browser-mode-on')) {
+          const addTabBtn = document.getElementById('bm-add-tab-btn');
+          if (addTabBtn) addTabBtn.click();
+        } else {
+          createNewChat(); 
+        }
+      });
 
       sbSearchIcon.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -7365,6 +8451,768 @@ h1 {
 
     })(); // end mobile enhancements IIFE
   </script>
+
+  <!-- ═══════════════════════════════════════════════
+       BROWSER MODE — JavaScript
+  ═══════════════════════════════════════════════ -->
+  <script>
+  (function() {
+    'use strict';
+
+    // ── DOM References ──
+    const panel = document.getElementById('browser-mode-panel');
+    const toggleBtn = document.getElementById('browser-mode-toggle-btn');
+    const closeBtn = document.getElementById('bm-close-btn');
+    const addTabBtn = document.getElementById('bm-add-tab-btn');
+    const tabsContainer = document.getElementById('bm-tabs-container');
+    const sectionTabsEl = document.getElementById('bm-section-tabs');
+    const contentEl = document.getElementById('bm-content');
+    const welcomeEl = document.getElementById('bm-welcome');
+    const iframeWrap = document.getElementById('bm-iframe-wrap');
+    const iframe = document.getElementById('bm-iframe');
+    const urlBar = document.getElementById('bm-url-bar');
+    const urlText = document.getElementById('bm-url-text');
+    const searchInput = document.getElementById('bm-search-input');
+    const searchSubmit = document.getElementById('bm-search-submit');
+    const privateToggle = document.getElementById('bm-private-toggle');
+    const backBtn = document.getElementById('bm-back-btn');
+    const refreshBtn = document.getElementById('bm-refresh-btn');
+    const appShell = document.getElementById('app-shell');
+
+    // ── State ──
+    let isOpen = false;
+    let isPrivate = false;
+    let tabs = [];
+    let activeTabId = null;
+    let tabIdCounter = 0;
+    let bmHistory = []; // saved search history (non-private)
+
+    // ── Tab Data Structure ──
+    function createTabData(title) {
+      return {
+        id: ++tabIdCounter,
+        title: title || 'New Tab',
+        starred: false,
+        query: '',
+        section: 'all',
+        results: { all: [], images: [], videos: [] },
+        aiResponse: '',
+        shortSummary: '',
+        viewingUrl: null,
+        state: 'welcome' // welcome | results | iframe
+      };
+    }
+
+    // ── Toggle Browser Mode ──
+    function openBrowserMode() {
+      isOpen = true;
+      if (tabs.length === 0) addTab();
+      
+      // Add browser-mode-on class first to hide #app
+      appShell.classList.add('browser-mode-on');
+      
+      // Small delay to ensure #app is hidden before showing browser panel
+      requestAnimationFrame(() => {
+        panel.style.display = 'flex';
+        requestAnimationFrame(() => {
+          panel.classList.add('active');
+          toggleBtn.classList.add('bm-active');
+        });
+      });
+      
+      // Focus after animations
+      setTimeout(() => {
+        searchInput.focus();
+      }, 50);
+    }
+
+    function closeBrowserMode() {
+      isOpen = false;
+      
+      // Start fade out
+      panel.classList.remove('active');
+      toggleBtn.classList.remove('bm-active');
+      
+      // After fade out, hide panel and show #app
+      setTimeout(() => { 
+        panel.style.display = 'none';
+        appShell.classList.remove('browser-mode-on');
+      }, 250);
+    }
+
+    toggleBtn.addEventListener('click', () => {
+      if ('vibrate' in navigator) navigator.vibrate(12);
+      isOpen ? closeBrowserMode() : openBrowserMode();
+    });
+    closeBtn.addEventListener('click', closeBrowserMode);
+
+    // ── Browser Mode Mobile Hamburger ──
+    const bmMobileTrigger = document.getElementById('bm-mobile-trigger');
+    const sidebar = document.getElementById('chat-sidebar');
+    const sbOverlay = document.getElementById('sb-overlay');
+    
+    if (bmMobileTrigger && sidebar && sbOverlay) {
+      bmMobileTrigger.addEventListener('click', () => {
+        if ('vibrate' in navigator) navigator.vibrate(10);
+        sidebar.classList.add('mobile-open');
+        sbOverlay.classList.add('active');
+        document.body.classList.add('sidebar-open');
+        document.body.style.overflow = 'hidden';
+      });
+    }
+
+    // ── Tab Management ──
+    function addTab(title) {
+      const tab = createTabData(title);
+      tabs.push(tab);
+      activeTabId = tab.id;
+      renderTabs();
+      renderActiveTab();
+      return tab;
+    }
+
+    function closeTab(id) {
+      const idx = tabs.findIndex(t => t.id === id);
+      if (idx === -1) return;
+      tabs.splice(idx, 1);
+      if (tabs.length === 0) {
+        addTab();
+      } else if (activeTabId === id) {
+        activeTabId = tabs[Math.min(idx, tabs.length - 1)].id;
+      }
+      renderTabs();
+      renderActiveTab();
+    }
+
+    function switchTab(id) {
+      activeTabId = id;
+      renderTabs();
+      renderActiveTab();
+    }
+
+    function getActiveTab() {
+      return tabs.find(t => t.id === activeTabId);
+    }
+
+    function renderTabs() {
+      tabsContainer.innerHTML = '';
+      const sbBmTabs = document.getElementById('sb-bm-tabs-container');
+      if (sbBmTabs) sbBmTabs.innerHTML = '';
+
+      tabs.forEach(tab => {
+        // Top bar tabs
+        const el = document.createElement('div');
+        el.className = 'bm-tab' + (tab.id === activeTabId ? ' active' : '');
+        el.innerHTML = `
+          <span class="bm-tab-star ${tab.starred ? 'active' : ''}" data-id="${tab.id}">
+            <svg viewBox="0 0 24 24" fill="${tab.starred ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </span>
+          <span class="bm-tab-title">${escHtml(tab.title)}</span>
+          <span class="bm-tab-close" data-id="${tab.id}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </span>
+        `;
+        el.addEventListener('click', (e) => {
+          if (e.target.closest('.bm-tab-close')) {
+            e.stopPropagation();
+            closeTab(tab.id);
+          } else if (e.target.closest('.bm-tab-star')) {
+            e.stopPropagation();
+            tab.starred = !tab.starred;
+            renderTabs();
+          } else {
+            switchTab(tab.id);
+          }
+        });
+        tabsContainer.appendChild(el);
+
+        // Sidebar tabs
+        if (sbBmTabs) {
+          const sbEl = document.createElement('div');
+          sbEl.className = 'sb-capsule' + (tab.id === activeTabId ? ' active' : '');
+          sbEl.innerHTML = `
+            <div class="sb-capsule-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </div>
+            <div class="sb-capsule-text" style="flex:1; overflow:hidden; text-overflow:ellipsis;">${escHtml(tab.title)}</div>
+            ${tab.starred ? '<div style="color:#f59e0b; display:flex; align-items:center; flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>' : ''}
+          `;
+          sbEl.addEventListener('click', () => {
+            switchTab(tab.id);
+            // Close mobile sidebar after selecting a tab on mobile
+            if (window.innerWidth <= 1024) {
+              const sidebar = document.getElementById('chat-sidebar');
+              const sbOverlay = document.getElementById('sb-overlay');
+              if (sidebar && sidebar.classList.contains('mobile-open')) {
+                sidebar.classList.remove('mobile-open');
+                sbOverlay.classList.remove('active');
+                document.body.classList.remove('sidebar-open');
+                document.body.style.overflow = '';
+              }
+            }
+          });
+          sbBmTabs.appendChild(sbEl);
+        }
+      });
+
+      if (addTabBtn) {
+        tabsContainer.appendChild(addTabBtn);
+      }
+
+      if (sbBmTabs && tabs.length === 0) {
+        sbBmTabs.innerHTML = '<div class="sb-empty-state">No tabs yet.<br>Start searching!</div>';
+      }
+    }
+
+    addTabBtn.addEventListener('click', () => addTab());
+
+    // ── Render Active Tab Content ──
+    function renderActiveTab() {
+      const tab = getActiveTab();
+      if (!tab) return;
+
+      searchInput.value = tab.query || '';
+
+      // Set active section tab
+      sectionTabsEl.querySelectorAll('.bm-section-tab').forEach(el => {
+        el.classList.toggle('active', el.dataset.section === tab.section);
+      });
+
+      if (tab.state === 'welcome') {
+        showWelcome();
+      } else if (tab.state === 'iframe') {
+        showIframe(tab.viewingUrl, false);
+      } else if (tab.state === 'results') {
+        renderResults(tab);
+      }
+    }
+
+    function showWelcome() {
+      contentEl.innerHTML = '';
+      contentEl.appendChild(welcomeEl);
+      welcomeEl.style.display = 'flex';
+      contentEl.style.display = 'flex';
+      iframeWrap.classList.remove('visible');
+      urlBar.classList.remove('visible');
+      sectionTabsEl.style.display = 'none';
+    }
+
+    // ── Search ──
+    async function doSearch(query, type) {
+      const tab = getActiveTab();
+      if (!tab || !query.trim()) return;
+
+      tab.query = query.trim();
+      tab.title = query.trim().substring(0, 30);
+      tab.section = type || 'all';
+      tab.state = 'results';
+      renderTabs();
+
+      // Show loading
+      contentEl.style.display = 'block';
+      iframeWrap.classList.remove('visible');
+      urlBar.classList.remove('visible');
+      sectionTabsEl.style.display = 'flex';
+
+      if (type === 'ai') {
+        renderAiPanel(tab);
+        return;
+      }
+
+      contentEl.innerHTML = `<div class="bm-loading"><div class="bm-spinner"></div><div class="bm-loading-text">Searching the web...</div></div>`;
+
+      try {
+        const resp = await fetch('/browser-search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: tab.query, type: type })
+        });
+        const data = await resp.json();
+        tab.results[type] = data.results || [];
+        renderResults(tab);
+
+        // Save to history (non-private)
+        if (!isPrivate) {
+          bmHistory.push({ query: tab.query, type: type, time: Date.now() });
+        }
+      } catch (err) {
+        console.error('[BrowserMode] Search error:', err);
+        contentEl.innerHTML = `<div class="bm-no-results"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg><p>Something went wrong. Please try again.</p></div>`;
+      }
+    }
+
+    function renderResults(tab) {
+      contentEl.style.display = 'block';
+      iframeWrap.classList.remove('visible');
+      urlBar.classList.remove('visible');
+      sectionTabsEl.style.display = 'flex';
+
+      const type = tab.section;
+      const results = tab.results[type] || [];
+
+      if (type === 'ai') {
+        renderAiPanel(tab);
+        return;
+      }
+
+      if (results.length === 0) {
+        contentEl.innerHTML = `<div class="bm-no-results"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><p>No results found for "${escHtml(tab.query)}". Try a different search.</p></div>`;
+        return;
+      }
+
+      if (type === 'all') {
+        renderAllResults(tab);
+      } else if (type === 'images') {
+        renderImageResults(results);
+      } else if (type === 'videos') {
+        renderVideoResults(results);
+      } else if (type === 'news') {
+        renderNewsResults(results);
+      }
+    }
+
+    function renderAllResults(tab) {
+      const results = tab.results.all || [];
+      let html = '<div class="bm-results-all">';
+      
+      // AI Summary Box
+      html += `
+        <div class="bm-ai-summary-box" id="bm-ai-summary-${tab.id}">
+          <div class="bm-ai-summary-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            AI Summary
+          </div>
+          <div id="bm-ai-summary-content-${tab.id}">
+            <span style="color:var(--muted)">Generating short summary...</span>
+          </div>
+        </div>
+      `;
+
+      results.forEach(r => {
+        html += `
+          <div class="bm-result-card" data-url="${escAttr(r.url)}">
+            <div class="bm-result-source">
+              <img src="${escAttr(r.favicon || '')}" alt="" onerror="this.style.display='none'">
+              <span>${escHtml(r.source || '')}</span>
+            </div>
+            <div class="bm-result-title">${escHtml(r.title || '')}</div>
+            <div class="bm-result-snippet">${escHtml(r.snippet || '')}</div>
+          </div>`;
+      });
+      html += '</div>';
+      contentEl.innerHTML = html;
+
+      // Click handlers
+      contentEl.querySelectorAll('.bm-result-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const url = card.dataset.url;
+          if (url) openUrl(url);
+        });
+      });
+
+      fetchShortAiSummary(tab);
+    }
+
+    async function fetchShortAiSummary(tab) {
+      const summaryBox = document.getElementById(`bm-ai-summary-content-${tab.id}`);
+      if (!summaryBox) return;
+
+      if (tab.shortSummary) {
+        summaryBox.innerHTML = tab.shortSummary.replace(/\n/g, '<br>');
+        return;
+      }
+
+      try {
+        const response = await fetch('/speak', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: 'Provide a very short 2-3 sentence summary explaining: ' + tab.query })
+        });
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let fullText = '';
+        let buffer = '';
+
+        summaryBox.innerHTML = '';
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop();
+
+          for (const line of lines) {
+            if (!line.trim()) continue;
+            try {
+              const data = JSON.parse(line);
+              if (data.chunk) {
+                fullText += data.chunk;
+                if (document.getElementById(`bm-ai-summary-content-${tab.id}`)) {
+                  document.getElementById(`bm-ai-summary-content-${tab.id}`).innerHTML = fullText.replace(/\n/g, '<br>');
+                }
+              }
+              if (data.reply) {
+                fullText += data.reply;
+                if (document.getElementById(`bm-ai-summary-content-${tab.id}`)) {
+                  document.getElementById(`bm-ai-summary-content-${tab.id}`).innerHTML = fullText.replace(/\n/g, '<br>');
+                }
+              }
+            } catch(e) {}
+          }
+        }
+        tab.shortSummary = fullText;
+      } catch (err) {
+        if (summaryBox) {
+          summaryBox.innerHTML = '<span style="color:var(--muted)">Could not generate summary.</span>';
+        }
+      }
+    }
+
+    function renderImageResults(results) {
+      let html = '<div class="bm-results-images">';
+      results.forEach(r => {
+        const thumb = r.thumbnail || r.image || '';
+        html += `
+          <div class="bm-image-card" data-url="${escAttr(r.url || r.image || '')}">
+            <img src="${escAttr(thumb)}" alt="${escAttr(r.title || '')}" loading="lazy" onerror="this.parentElement.style.display='none'">
+            <div class="bm-image-card-info">
+              <span>${escHtml(r.source || '')}</span>
+            </div>
+          </div>`;
+      });
+      html += '</div>';
+      contentEl.innerHTML = html;
+
+      contentEl.querySelectorAll('.bm-image-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const url = card.dataset.url;
+          if (url) openUrl(url);
+        });
+      });
+    }
+
+    function renderVideoResults(results) {
+      let html = '<div class="bm-results-videos">';
+      results.forEach(r => {
+        html += `
+          <div class="bm-video-card" data-url="${escAttr(r.url || '')}">
+            <div class="bm-video-thumb">
+              <img src="${escAttr(r.thumbnail || '')}" alt="" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22/>'">
+              ${r.duration ? `<span class="bm-video-duration">${escHtml(r.duration)}</span>` : ''}
+            </div>
+            <div class="bm-video-info">
+              <div class="bm-video-title">${escHtml(r.title || '')}</div>
+              <div class="bm-video-meta">${escHtml(r.source || '')} ${r.published ? '· ' + escHtml(r.published) : ''}</div>
+            </div>
+          </div>`;
+      });
+      html += '</div>';
+      contentEl.innerHTML = html;
+
+      contentEl.querySelectorAll('.bm-video-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const url = card.dataset.url;
+          if (url) openUrl(url);
+        });
+      });
+    }
+
+    function renderNewsResults(results) {
+      let html = '<div class="bm-results-all">';
+      results.forEach(r => {
+        const dateStr = r.published ? new Date(r.published).toLocaleDateString() : '';
+        html += `
+          <div class="bm-result-card" data-url="${escAttr(r.url)}" style="display:flex; gap:16px;">
+            <div style="flex:1;">
+              <div class="bm-result-source">
+                <span>${escHtml(r.source || '')}</span>
+                ${dateStr ? `<span style="color:var(--muted); margin-left:8px;">&bull; ${dateStr}</span>` : ''}
+              </div>
+              <div class="bm-result-title">${escHtml(r.title || '')}</div>
+              <div class="bm-result-snippet">${escHtml(r.snippet || '')}</div>
+            </div>
+            ${r.image ? `<div style="width:100px; height:70px; flex-shrink:0; border-radius:8px; overflow:hidden;"><img src="${escAttr(r.image)}" style="width:100%; height:100%; object-fit:cover;"></div>` : ''}
+          </div>`;
+      });
+      html += '</div>';
+      contentEl.innerHTML = html;
+      contentEl.querySelectorAll('.bm-result-card').forEach(card => {
+        card.addEventListener('click', () => {
+          if (card.dataset.url) openUrl(card.dataset.url);
+        });
+      });
+    }
+
+    // ── AI Research Panel ──
+    async function renderAiPanel(tab) {
+      const query = tab.query;
+      contentEl.innerHTML = `
+        <div class="bm-ai-panel">
+          <div class="bm-ai-prompt">🔍 Researching: <strong>${escHtml(query)}</strong></div>
+          <div class="bm-ai-response" id="bm-ai-response-area">
+            <div class="bm-loading" style="padding: 24px;"><div class="bm-spinner"></div><div class="bm-loading-text">AI is researching...</div></div>
+          </div>
+        </div>`;
+
+      try {
+        const response = await fetch('/speak', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: 'Research this topic in detail and give me comprehensive information: ' + query })
+        });
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let fullText = '';
+        let buffer = '';
+        const responseArea = document.getElementById('bm-ai-response-area');
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop();
+
+          for (const line of lines) {
+            if (!line.trim()) continue;
+            try {
+              const data = JSON.parse(line);
+              if (data.chunk) {
+                fullText += data.chunk;
+                if (responseArea) {
+                  responseArea.innerHTML = fullText.replace(/\n/g, '<br>');
+                }
+              }
+              if (data.reply) {
+                fullText += data.reply;
+                if (responseArea) {
+                  responseArea.innerHTML = fullText.replace(/\n/g, '<br>');
+                }
+              }
+            } catch(e) {}
+          }
+        }
+        tab.aiResponse = fullText;
+      } catch (err) {
+        const responseArea = document.getElementById('bm-ai-response-area');
+        if (responseArea) {
+          responseArea.innerHTML = '<p style="color:var(--muted)">Could not get AI response. Please try again.</p>';
+        }
+      }
+    }
+
+    // ── Open URL in Iframe ──
+    function openUrl(url) {
+      if (!url) return;
+
+      // If it's not a full URL, open as a search
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+      }
+
+      const tab = getActiveTab();
+      if (tab) {
+        tab.viewingUrl = url;
+        tab.state = 'iframe';
+        tab.title = url.replace(/^https?:\/\//, '').split('/')[0].substring(0, 25);
+        renderTabs();
+      }
+
+      showIframe(url, true);
+    }
+
+    function showIframe(url, load) {
+      contentEl.style.display = 'none';
+      sectionTabsEl.style.display = 'none';
+      iframeWrap.classList.add('visible');
+      urlBar.classList.add('visible');
+
+      try {
+        const parsed = new URL(url);
+        urlText.textContent = parsed.hostname + parsed.pathname;
+      } catch(e) {
+        urlText.textContent = url;
+      }
+
+      if (load) {
+        iframe.src = url;
+
+        // Handle iframe load errors
+        iframe.onerror = () => showIframeError(url);
+
+        // Timeout fallback: if iframe doesn't load in 8s, offer to open externally
+        const timeout = setTimeout(() => {
+          try {
+            // Try to access iframe content — if blocked by CORS, this throws
+            const doc = iframe.contentDocument || iframe.contentWindow.document;
+            if (!doc || !doc.body || doc.body.innerHTML.length === 0) {
+              showIframeError(url);
+            }
+          } catch(e) {
+            // Cross-origin — iframe loaded but we can't access it (which is OK)
+          }
+        }, 8000);
+
+        iframe.onload = () => clearTimeout(timeout);
+      }
+    }
+
+    function showIframeError(url) {
+      iframeWrap.classList.remove('visible');
+      contentEl.style.display = 'block';
+      sectionTabsEl.style.display = 'none';
+      contentEl.innerHTML = `
+        <div class="bm-iframe-error">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <h3>This site can't be shown here</h3>
+          <p>"${escHtml(url.substring(0, 60))}" uses security headers that prevent it from loading inside an embedded view.</p>
+          <button onclick="window.open('${escAttr(url)}', '_blank')">Open in New Tab →</button>
+        </div>`;
+    }
+
+    // ── Back to Results ──
+    backBtn.addEventListener('click', () => {
+      const tab = getActiveTab();
+      if (tab && tab.state === 'iframe') {
+        tab.state = 'results';
+        tab.viewingUrl = null;
+        iframe.src = 'about:blank';
+        renderActiveTab();
+      }
+    });
+    backBtn.disabled = false; // enable since it acts as "back to results"
+
+    refreshBtn.addEventListener('click', () => {
+      const tab = getActiveTab();
+      if (tab && tab.viewingUrl) {
+        iframe.src = tab.viewingUrl;
+      }
+    });
+
+    // ── Section Tab Switching ──
+    sectionTabsEl.querySelectorAll('.bm-section-tab').forEach(tabEl => {
+      tabEl.addEventListener('click', () => {
+        const section = tabEl.dataset.section;
+        const tab = getActiveTab();
+        if (!tab) return;
+
+        tab.section = section;
+        sectionTabsEl.querySelectorAll('.bm-section-tab').forEach(t => {
+          t.classList.toggle('active', t.dataset.section === section);
+        });
+
+        if (section === 'ai') {
+          if (tab.query) renderAiPanel(tab);
+          else showWelcome();
+        } else if (tab.results[section] && tab.results[section].length > 0) {
+          renderResults(tab);
+        } else if (tab.query) {
+          doSearch(tab.query, section);
+        } else {
+          showWelcome();
+        }
+      });
+    });
+
+    // ── Apps Menu ──
+    const appsBtn = document.getElementById('bm-apps-btn');
+    const appsMenu = document.getElementById('bm-apps-menu');
+    appsBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      appsMenu.classList.toggle('active');
+    });
+    document.addEventListener('click', (e) => {
+      if (!appsBtn.contains(e.target) && !appsMenu.contains(e.target)) {
+        appsMenu.classList.remove('active');
+      }
+    });
+    appsMenu.querySelectorAll('.bm-app-item').forEach(item => {
+      item.addEventListener('click', () => {
+        appsMenu.classList.remove('active');
+        openUrl(item.dataset.url);
+      });
+    });
+
+    // ── Search Input Handling ──
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const q = searchInput.value.trim();
+        if (q) {
+          const tab = getActiveTab();
+          const section = tab ? tab.section : 'all';
+          const searchSection = section === 'ai' ? 'ai' : 'all';
+          doSearch(q, searchSection);
+        }
+      }
+    });
+
+    searchSubmit.addEventListener('click', () => {
+      const q = searchInput.value.trim();
+      if (q) {
+        const tab = getActiveTab();
+        const section = tab ? tab.section : 'all';
+        const searchSection = section === 'ai' ? 'ai' : 'all';
+        doSearch(q, searchSection);
+      }
+    });
+
+    // ── Private Mode ──
+    privateToggle.addEventListener('click', () => {
+      isPrivate = !isPrivate;
+      privateToggle.classList.toggle('private-active', isPrivate);
+      panel.classList.toggle('bm-private', isPrivate);
+      document.getElementById('app-shell').classList.toggle('bm-private-on', isPrivate);
+      
+      const welcomeH2 = welcomeEl.querySelector('h2');
+      const welcomeP = welcomeEl.querySelector('p');
+      
+      if (welcomeH2 && welcomeP) {
+        welcomeH2.style.opacity = '0';
+        welcomeP.style.opacity = '0';
+        setTimeout(() => {
+          welcomeH2.textContent = isPrivate ? 'Private Browsing' : 'Browse the web';
+          welcomeP.textContent = isPrivate ? 'Searches in this mode will not be saved to your history.' : 'Search anything below. Results will appear with clickable links, images, videos, and AI-powered research.';
+          welcomeH2.style.opacity = '1';
+          welcomeP.style.opacity = '1';
+        }, 300);
+      }
+    });
+
+    // ── Keyboard Shortcut: Escape to close ──
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        const tab = getActiveTab();
+        if (tab && tab.state === 'iframe') {
+          // First escape: go back to results
+          tab.state = 'results';
+          tab.viewingUrl = null;
+          iframe.src = 'about:blank';
+          renderActiveTab();
+        } else {
+          closeBrowserMode();
+        }
+      }
+    });
+
+    // ── Utilities ──
+    function escHtml(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+    function escAttr(str) {
+      if (!str) return '';
+      return str.replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+  })();
+  </script>
+
 </body>
 
 </html>

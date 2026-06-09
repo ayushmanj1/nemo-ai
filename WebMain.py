@@ -51,6 +51,7 @@ from backend.RealtimeSearchEngin import RealtimeSearchEngine
 from backend.Chatbot import ChatBot, ClearChatHistory
 from backend.ImageGeneration import GenerateImages
 from backend.DocumentExtraction import get_document_content
+from backend.browser_search import browser_search
 
 # ── Session Data Store (RAM-based) ───────────────────────────────────────────
 # In a production environment with multiple Render workers, Redis would be better.
@@ -373,6 +374,23 @@ Code continuation:"""
     except Exception as e:
         print("Autocomplete Error:", e)
         return jsonify({"error": str(e)}), 500
+
+# ── POST /browser-search (Browser Mode) ──────────────────────────────────────
+@app.route("/browser-search", methods=["POST"])
+def browser_search_route():
+    data = request.get_json()
+    if not data:
+        return jsonify(error="No data"), 400
+    query = (data.get("query") or "").strip()
+    search_type = data.get("type", "all")
+    if not query:
+        return jsonify(error="No query"), 400
+    try:
+        results = browser_search(query, search_type)
+        return jsonify(results=results)
+    except Exception as e:
+        print(f"[BrowserSearch] Route error: {e}")
+        return jsonify(error=str(e), results=[]), 500
 
 # ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
