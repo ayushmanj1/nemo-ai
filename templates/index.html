@@ -4664,6 +4664,20 @@
       border: 1px solid var(--border);
       cursor: pointer;
       transition: all 0.2s;
+      position: relative;
+    }
+    .bm-result-card.bm-external-link::after {
+      content: '↗';
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      font-size: 14px;
+      color: var(--muted);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .bm-result-card.bm-external-link:hover::after {
+      opacity: 1;
     }
     .bm-result-card:hover {
       border-color: var(--accent);
@@ -4835,6 +4849,12 @@
       flex-direction: column;
       gap: 14px;
     }
+    .bm-video-card-wrapper {
+      position: relative;
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
+    }
     .bm-video-card {
       display: flex;
       gap: 14px;
@@ -4844,11 +4864,52 @@
       border: 1px solid var(--border);
       cursor: pointer;
       transition: all 0.2s;
+      position: relative;
+      flex: 1;
+    }
+    .bm-video-card::after {
+      content: '▶';
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .bm-video-card:hover::after {
+      opacity: 1;
     }
     .bm-video-card:hover {
       border-color: var(--accent);
       transform: translateY(-1px);
       box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    }
+    .bm-video-open-external {
+      width: 44px;
+      height: auto;
+      min-height: 44px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .bm-video-open-external svg {
+      width: 18px;
+      height: 18px;
+    }
+    .bm-video-open-external:hover {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
     }
     .bm-video-thumb {
       width: 160px; height: 90px;
@@ -4924,13 +4985,152 @@
       line-height: 1.65;
     }
 
-    /* Iframe Wrapper */
+    /* Iframe Wrapper with Split View */
     .bm-iframe-wrap {
       flex: 1;
       display: none;
       flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
     }
     .bm-iframe-wrap.visible { display: flex; }
+    
+    .bm-split-container {
+      display: flex;
+      flex: 1;
+      gap: 0;
+      overflow: hidden;
+      height: 100%;
+      min-height: 0;
+    }
+    
+    .bm-video-player {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      background: #000;
+      height: 100%;
+    }
+    
+    .bm-video-player iframe {
+      flex: 1;
+      width: 100%;
+      border: none;
+      background: #000;
+    }
+    
+    .bm-recommended-sidebar {
+      width: 420px;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      height: 100%;
+    }
+    
+    .bm-recommended-header {
+      padding: 16px 20px;
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+      flex-shrink: 0;
+    }
+    
+    .bm-recommended-list {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 0;
+    }
+    
+    .bm-recommended-list::-webkit-scrollbar {
+      width: 6px;
+    }
+    .bm-recommended-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .bm-recommended-list::-webkit-scrollbar-thumb {
+      background: rgba(110, 110, 128, 0.4);
+      border-radius: 4px;
+    }
+    
+    .bm-recommended-item {
+      display: flex;
+      gap: 10px;
+      padding: 8px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+      background: transparent;
+    }
+    
+    .bm-recommended-item:hover {
+      background: var(--hover-bg);
+      transform: translateX(2px);
+    }
+    
+    .bm-recommended-thumb {
+      width: 140px;
+      height: 78px;
+      border-radius: 8px;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: var(--surface2);
+      position: relative;
+    }
+    
+    .bm-recommended-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .bm-recommended-thumb .duration {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      background: rgba(0,0,0,0.85);
+      color: #fff;
+      font-size: 10px;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-family: 'DM Sans', sans-serif;
+    }
+    
+    .bm-recommended-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    .bm-recommended-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    .bm-recommended-meta {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    
     .bm-iframe-wrap iframe {
       flex: 1;
       width: 100%;
@@ -5323,6 +5523,25 @@
       .bm-tab { padding: 6px 10px; font-size: 12px; max-width: 120px; }
       .bm-search-input-wrap { padding: 8px 14px; }
       #bm-search-input { font-size: 16px !important; }
+      
+      /* Stack video player and sidebar vertically on mobile */
+      .bm-split-container {
+        flex-direction: column;
+      }
+      .bm-video-player {
+        height: 250px;
+        flex: 0 0 auto;
+      }
+      .bm-recommended-sidebar {
+        width: 100%;
+        border-left: none;
+        border-top: 1px solid var(--border);
+        flex: 1;
+      }
+      .bm-recommended-thumb {
+        width: 100px;
+        height: 56px;
+      }
     }
 
   </style>
@@ -5917,7 +6136,17 @@
 
     <!-- Iframe Wrapper (for loading websites) -->
     <div class="bm-iframe-wrap" id="bm-iframe-wrap">
-      <iframe id="bm-iframe" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+      <div class="bm-split-container">
+        <div class="bm-video-player">
+          <iframe id="bm-iframe" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+        </div>
+        <div class="bm-recommended-sidebar" id="bm-recommended-sidebar">
+          <div class="bm-recommended-header">Related Videos</div>
+          <div class="bm-recommended-list" id="bm-recommended-list">
+            <!-- Recommended videos will be populated here -->
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Bottom Search Bar -->
@@ -8914,9 +9143,14 @@ h1 {
         </div>
       `;
 
+      // List of domains that open in new tab (excluding YouTube since we can embed it)
+      const blockedDomains = ['facebook.com', 'instagram.com', 'twitter.com', 'x.com', 'tiktok.com', 'linkedin.com'];
+
       results.forEach(r => {
+        const isExternal = blockedDomains.some(domain => (r.url || '').toLowerCase().includes(domain));
+        const externalClass = isExternal ? ' bm-external-link' : '';
         html += `
-          <div class="bm-result-card" data-url="${escAttr(r.url)}">
+          <div class="bm-result-card${externalClass}" data-url="${escAttr(r.url)}">
             <div class="bm-result-source">
               <img src="${escAttr(r.favicon || '')}" alt="" onerror="this.style.display='none'">
               <span>${escHtml(r.source || '')}</span>
@@ -9092,24 +9326,43 @@ h1 {
       let html = '<div class="bm-results-videos">';
       results.forEach(r => {
         html += `
-          <div class="bm-video-card" data-url="${escAttr(r.url || '')}">
-            <div class="bm-video-thumb">
-              <img src="${escAttr(r.thumbnail || '')}" alt="" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22/>'">
-              ${r.duration ? `<span class="bm-video-duration">${escHtml(r.duration)}</span>` : ''}
+          <div class="bm-video-card-wrapper">
+            <div class="bm-video-card" data-url="${escAttr(r.url || '')}">
+              <div class="bm-video-thumb">
+                <img src="${escAttr(r.thumbnail || '')}" alt="" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22/>'">
+                ${r.duration ? `<span class="bm-video-duration">${escHtml(r.duration)}</span>` : ''}
+              </div>
+              <div class="bm-video-info">
+                <div class="bm-video-title">${escHtml(r.title || '')}</div>
+                <div class="bm-video-meta">${escHtml(r.source || '')} ${r.published ? '· ' + escHtml(r.published) : ''}</div>
+              </div>
             </div>
-            <div class="bm-video-info">
-              <div class="bm-video-title">${escHtml(r.title || '')}</div>
-              <div class="bm-video-meta">${escHtml(r.source || '')} ${r.published ? '· ' + escHtml(r.published) : ''}</div>
-            </div>
+            <button class="bm-video-open-external" data-url="${escAttr(r.url || '')}" title="Open on YouTube">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+            </button>
           </div>`;
       });
       html += '</div>';
       contentEl.innerHTML = html;
 
+      // Click to embed
       contentEl.querySelectorAll('.bm-video-card').forEach(card => {
         card.addEventListener('click', () => {
           const url = card.dataset.url;
           if (url) openUrl(url);
+        });
+      });
+
+      // Click to open on YouTube
+      contentEl.querySelectorAll('.bm-video-open-external').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation(); // Don't trigger card click
+          const url = btn.dataset.url;
+          if (url) window.open(url, '_blank');
         });
       });
     }
@@ -9208,6 +9461,29 @@ h1 {
         url = 'https://' + url;
       }
 
+      // Convert YouTube watch URLs to embed URLs
+      url = convertToEmbedUrl(url);
+
+      // List of domains that block iframe embedding - open these in new tab
+      const blockedDomains = [
+        'facebook.com',
+        'instagram.com',
+        'twitter.com',
+        'x.com',
+        'tiktok.com',
+        'linkedin.com'
+      ];
+
+      // Check if URL contains any blocked domain
+      const shouldOpenInNewTab = blockedDomains.some(domain => url.toLowerCase().includes(domain));
+
+      if (shouldOpenInNewTab) {
+        // Open in new tab for blocked domains
+        window.open(url, '_blank');
+        return;
+      }
+
+      // For other sites (including YouTube embeds), try iframe
       const tab = getActiveTab();
       if (tab) {
         tab.viewingUrl = url;
@@ -9217,6 +9493,63 @@ h1 {
       }
 
       showIframe(url, true);
+    }
+
+    function convertToEmbedUrl(url) {
+      // Convert video URLs to their embed-friendly versions
+      // YouTube, Vimeo, Dailymotion, etc.
+      
+      try {
+        const urlObj = new URL(url);
+        
+        // ═══ YOUTUBE ═══
+        // Handle youtube.com/watch?v=...
+        if (urlObj.hostname.includes('youtube.com') && urlObj.pathname === '/watch') {
+          const videoId = urlObj.searchParams.get('v');
+          if (videoId) {
+            return `https://www.youtube.com/embed/${videoId}`;
+          }
+        }
+        
+        // Handle youtu.be/VIDEO_ID
+        if (urlObj.hostname === 'youtu.be' || urlObj.hostname === 'www.youtu.be') {
+          const videoId = urlObj.pathname.slice(1); // Remove leading /
+          if (videoId) {
+            return `https://www.youtube.com/embed/${videoId}`;
+          }
+        }
+        
+        // Handle youtube.com/shorts/VIDEO_ID
+        if (urlObj.hostname.includes('youtube.com') && urlObj.pathname.startsWith('/shorts/')) {
+          const videoId = urlObj.pathname.split('/shorts/')[1];
+          if (videoId) {
+            return `https://www.youtube.com/embed/${videoId}`;
+          }
+        }
+        
+        // ═══ VIMEO ═══
+        // Handle vimeo.com/VIDEO_ID
+        if (urlObj.hostname.includes('vimeo.com')) {
+          const videoId = urlObj.pathname.split('/').filter(x => x)[0];
+          if (videoId && /^\d+$/.test(videoId)) {
+            return `https://player.vimeo.com/video/${videoId}`;
+          }
+        }
+        
+        // ═══ DAILYMOTION ═══
+        // Handle dailymotion.com/video/VIDEO_ID
+        if (urlObj.hostname.includes('dailymotion.com') && urlObj.pathname.includes('/video/')) {
+          const videoId = urlObj.pathname.split('/video/')[1]?.split('_')[0];
+          if (videoId) {
+            return `https://www.dailymotion.com/embed/video/${videoId}`;
+          }
+        }
+        
+      } catch(e) {
+        // Invalid URL, return as-is
+      }
+      
+      return url;
     }
 
     function showIframe(url, load) {
@@ -9230,6 +9563,14 @@ h1 {
         urlText.textContent = parsed.hostname + parsed.pathname;
       } catch(e) {
         urlText.textContent = url;
+      }
+
+      // Check if it's a YouTube video and populate recommended videos
+      const isYouTubeEmbed = url.includes('youtube.com/embed/');
+      if (isYouTubeEmbed) {
+        populateRecommendedVideos();
+      } else {
+        clearRecommendedVideos();
       }
 
       if (load) {
@@ -9255,17 +9596,81 @@ h1 {
       }
     }
 
+    function populateRecommendedVideos() {
+      const tab = getActiveTab();
+      if (!tab || !tab.results || !tab.results.videos) return;
+
+      const recommendedList = document.getElementById('bm-recommended-list');
+      if (!recommendedList) return;
+
+      const videos = tab.results.videos || [];
+      
+      let html = '';
+      videos.forEach(video => {
+        html += `
+          <div class="bm-recommended-item" data-url="${escAttr(video.url || '')}">
+            <div class="bm-recommended-thumb">
+              <img src="${escAttr(video.thumbnail || '')}" alt="" loading="lazy" onerror="this.style.display='none'">
+              ${video.duration ? `<span class="duration">${escHtml(video.duration)}</span>` : ''}
+            </div>
+            <div class="bm-recommended-info">
+              <div class="bm-recommended-title">${escHtml(video.title || '')}</div>
+              <div class="bm-recommended-meta">${escHtml(video.source || '')}${video.published ? ' · ' + escHtml(video.published) : ''}</div>
+            </div>
+          </div>`;
+      });
+
+      recommendedList.innerHTML = html || '<div style="padding:20px;text-align:center;color:var(--muted);">No recommendations</div>';
+
+      // Add click handlers
+      recommendedList.querySelectorAll('.bm-recommended-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const url = item.dataset.url;
+          if (url) openUrl(url);
+        });
+      });
+    }
+
+    function clearRecommendedVideos() {
+      const recommendedList = document.getElementById('bm-recommended-list');
+      if (recommendedList) {
+        recommendedList.innerHTML = '';
+      }
+    }
+
     function showIframeError(url) {
       iframeWrap.classList.remove('visible');
       contentEl.style.display = 'block';
       sectionTabsEl.style.display = 'none';
-      contentEl.innerHTML = `
-        <div class="bm-iframe-error">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <h3>This site can't be shown here</h3>
-          <p>"${escHtml(url.substring(0, 60))}" uses security headers that prevent it from loading inside an embedded view.</p>
-          <button onclick="window.open('${escAttr(url)}', '_blank')">Open in New Tab →</button>
-        </div>`;
+      
+      // Check if it's a YouTube embed that failed
+      const isYouTube = url.includes('youtube.com/embed/');
+      
+      if (isYouTube) {
+        // Extract video ID to create watch URL
+        const videoId = url.split('/embed/')[1]?.split('?')[0];
+        const watchUrl = videoId ? `https://www.youtube.com/watch?v=${videoId}` : url;
+        
+        contentEl.innerHTML = `
+          <div class="bm-iframe-error">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:48px;height:48px;color:var(--accent);">
+              <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+            </svg>
+            <h3>Video Embedding Disabled</h3>
+            <p>The uploader has disabled embedding for this video. You can still watch it on YouTube.</p>
+            <button style="background:var(--accent);color:#fff;padding:12px 24px;border:none;border-radius:10px;font-size:14px;cursor:pointer;font-family:'Syne',sans-serif;font-weight:500;" onclick="window.open('${escAttr(watchUrl)}', '_blank')">
+              Watch on YouTube →
+            </button>
+          </div>`;
+      } else {
+        contentEl.innerHTML = `
+          <div class="bm-iframe-error">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <h3>This site can't be shown here</h3>
+            <p>"${escHtml(url.substring(0, 60))}" uses security headers that prevent it from loading inside an embedded view.</p>
+            <button onclick="window.open('${escAttr(url)}', '_blank')">Open in New Tab →</button>
+          </div>`;
+      }
     }
 
     // ── Back to Results ──
